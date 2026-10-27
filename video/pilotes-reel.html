@@ -2,703 +2,422 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Neorigen Pilotes Reel</title>
+<title>Neorigen · Pilotes</title>
 <style>
-  :root{
-    --bg0:#070C16; --bg1:#0E1829; --bg2:#152336;
-    --ink:#F2F6FA; --ink2:#AFC0D4; --ink3:#7A8DA6;
-    --or:#FF7A1A; --or2:#FFA95C;
-    --tl:#27D9A3; --rd:#FF4D5E; --wt:#3FA9F5;
-    --pvc:#EDF2F7; --conc:#B9C3CE; --soil:#3A2D24; --soil2:#53402F; --firm:#6E5540;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg0)}
-  body{font-family:'Inter Display','Inter',sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
-  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;
-    background:
-      radial-gradient(1100px 760px at 50% 34%, #1B2C44 0%, rgba(27,44,68,0) 70%),
-      linear-gradient(180deg,var(--bg0) 0%,var(--bg1) 42%,var(--bg0) 100%);}
-  #grain{position:absolute;inset:0;opacity:.055;
-    background-image:linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px);
-    background-size:60px 60px;mask-image:radial-gradient(760px 900px at 50% 46%,#000 0%,transparent 78%);
-    -webkit-mask-image:radial-gradient(760px 900px at 50% 46%,#000 0%,transparent 78%)}
-  .scene{position:absolute;left:0;top:0;width:1080px;height:1920px;display:none;opacity:0}
+@font-face{font-family:'Fraunces Display';src:url('fonts/FrauncesDisplay.ttf') format('truetype');font-weight:300;font-style:normal;font-display:block}
+@font-face{font-family:'Work Sans N';src:url('fonts/WorkSans-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}
+@font-face{font-family:'Work Sans N';src:url('fonts/WorkSans-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:block}
+@font-face{font-family:'Plex Mono N';src:url('fonts/IBMPlexMono-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}
+@font-face{font-family:'Plex Mono N';src:url('fonts/IBMPlexMono-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:block}
 
-  /* ---- chrome ---- */
-  #chrome{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none}
-  #brand{position:absolute;left:72px;top:300px;display:flex;align-items:center;gap:14px}
-  #brand .mk{width:16px;height:34px;border-radius:5px;background:linear-gradient(180deg,var(--or),#D0520A);box-shadow:0 0 22px rgba(255,122,26,.45)}
-  #brand .tx{font-size:27px;font-weight:800;letter-spacing:.3em;color:var(--ink2)}
-  #pbarw{position:absolute;left:72px;top:356px;width:936px;height:5px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}
-  #pbar{height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--or),var(--or2))}
-  #foot{position:absolute;left:72px;top:1566px;width:936px;display:flex;justify-content:space-between;align-items:center;
-    font-size:25px;font-weight:600;color:var(--ink3);letter-spacing:.06em}
-  .deco{position:absolute;left:0;width:1080px;height:170px;opacity:.5}
+:root{
+  --azul:#011E2F; --niebla:#F1F4F3; --pino:#3C4A3E; --madera:#A9764A; --amarillo:#FFEDA0;
+  --i85:#27404E; --i70:#4D626D; --i50:#808E97; --i30:#B3BCC1; --i20:#CCD2D5;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--azul)}
+body{-webkit-font-smoothing:antialiased;color:var(--niebla)}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--azul)}
+.scene{position:absolute;left:0;top:0;width:1080px;height:1920px;display:none;opacity:0}
 
-  /* ---- type ---- */
-  .kicker{font-size:28px;font-weight:800;letter-spacing:.22em;color:var(--or);text-transform:uppercase}
-  h1{font-size:112px;line-height:.98;font-weight:900;letter-spacing:-.035em}
-  h2{font-size:74px;line-height:1.02;font-weight:900;letter-spacing:-.028em}
-  .lead{font-size:38px;line-height:1.3;font-weight:500;color:var(--ink2)}
-  .hl{color:var(--or)}
-  .wrap{position:absolute;left:72px;width:936px}
-  .rv{opacity:0}
+/* ---- zona segura: top 250 · bottom 420 · right 130 ---- */
+.col{position:absolute;left:80px;width:870px}
 
-  /* bullets */
-  .bul{display:flex;gap:22px;align-items:flex-start;margin-top:30px}
-  .bul .dot{flex:0 0 auto;width:46px;height:46px;border-radius:14px;background:rgba(39,217,163,.14);
-    display:flex;align-items:center;justify-content:center;margin-top:3px}
-  .bul .dot svg{width:26px;height:26px}
-  .bul .tx{font-size:36px;line-height:1.27;font-weight:600;color:#DCE6F2}
-  .bul .tx b{color:#fff;font-weight:800}
-
-  .chip{display:inline-flex;align-items:center;gap:16px;padding:20px 30px;border-radius:22px;
-    background:rgba(255,122,26,.12);border:2px solid rgba(255,122,26,.38);
-    font-size:32px;font-weight:700;color:#FFD9BC}
-  .chip.bad{background:rgba(255,77,94,.12);border-color:rgba(255,77,94,.4);color:#FFC9CE}
-  .chip.good{background:rgba(39,217,163,.12);border-color:rgba(39,217,163,.4);color:#BFF6E4}
-
-  .cap{font-size:27px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-  svg{display:block;overflow:visible}
-  text{font-family:'Inter Display','Inter',sans-serif}
+.eyebrow{font-family:'Plex Mono N';font-weight:500;font-size:34px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--amarillo)}
+.title{font-family:'Fraunces Display';font-weight:300;font-size:96px;line-height:1.16;
+  letter-spacing:-.005em;color:var(--niebla)}
+.title.hook{font-size:120px;line-height:1.12}
+.support{font-family:'Work Sans N';font-weight:400;font-size:48px;line-height:1.35;color:var(--i30)}
+.support b{font-weight:500;color:var(--niebla)}
+.rv{opacity:0}
+svg{display:block;overflow:visible}
+text{font-family:'Plex Mono N';font-weight:500;letter-spacing:.08em}
+.rule{height:3px;width:0;background:var(--madera)}
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="grain"></div>
 
-  <!-- ================= S1 HOOK ================= -->
+  <!-- ============ 1 · GANCHO ============ -->
   <div class="scene" id="s1">
-    <div class="wrap" style="top:470px">
-      <div class="kicker rv" data-d="0.15">Neorigen · Fundaciones</div>
-      <h1 class="rv" data-d="0.35" style="margin-top:28px">TU CASA</h1>
-      <h1 class="rv" data-d="0.5">NO DEBERÍA</h1>
-      <div style="position:relative;display:inline-block">
-        <h1 class="rv" data-d="0.65">TOCAR EL SUELO.</h1>
-        <div id="s1ul" style="position:absolute;left:0;bottom:-16px;height:12px;width:0;border-radius:7px;background:linear-gradient(90deg,var(--or),var(--or2))"></div>
-      </div>
-      <div class="lead rv" data-d="1.15" style="margin-top:52px">Por eso construimos sobre <b style="color:#fff;font-weight:800">pilotes de PVC rellenos de hormigón</b>.</div>
+    <div class="col" style="top:296px">
+      <div class="eyebrow rv" data-d="0.30">Fundaciones</div>
+      <div class="rule" id="r1" style="margin-top:26px"></div>
+      <div class="title hook rv" data-d="0.55" style="margin-top:46px">La casa empieza</div>
+      <div class="title hook rv" data-d="0.80">bajo tierra.</div>
     </div>
-    <svg id="s1svg" width="1080" height="560" style="position:absolute;left:0;top:1030px" viewBox="0 0 1080 560">
-      <defs>
-        <pattern id="hatch1" width="16" height="16" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-          <line x1="0" y1="0" x2="0" y2="16" stroke="#6E5540" stroke-width="5" opacity=".5"/>
-        </pattern>
-      </defs>
-    </svg>
+    <svg id="v1" width="1080" height="600" style="position:absolute;left:0;top:860px" viewBox="0 0 1080 600"></svg>
   </div>
 
-  <!-- ================= S2 QUÉ ES ================= -->
+  <!-- ============ 2 · EL PILOTE ============ -->
   <div class="scene" id="s2">
-    <div class="wrap" style="top:430px">
-      <div class="kicker rv" data-d="0.1">01 · El elemento</div>
-      <h2 class="rv" data-d="0.28" style="margin-top:22px">Tubo de PVC +<br>hormigón armado</h2>
+    <div class="col" style="top:296px">
+      <div class="eyebrow rv" data-d="0.25">01 · El pilote</div>
+      <div class="rule" id="r2" style="margin-top:26px"></div>
+      <div class="title rv" data-d="0.50" style="margin-top:46px">Un tubo de PVC</div>
+      <div class="title rv" data-d="0.70">lleno de hormigón.</div>
+      <div class="support rv" data-d="1.15" style="margin-top:44px">No es madera: <b>no se pudre.</b></div>
     </div>
-    <svg id="s2svg" width="1080" height="700" style="position:absolute;left:0;top:700px" viewBox="0 0 1080 700"></svg>
-    <div class="wrap" style="top:1452px">
-      <div class="chip rv" data-d="2.9">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="#FF8A4C" stroke-width="2.6" stroke-linecap="round"/></svg>
-        NO es pilote de madera: no se pudre
-      </div>
-    </div>
+    <svg id="v2" width="1080" height="560" style="position:absolute;left:0;top:890px" viewBox="0 0 1080 560"></svg>
   </div>
 
-  <!-- ================= S3 TERRENO ================= -->
+  <!-- ============ 3 · EL TERRENO ============ -->
   <div class="scene" id="s3">
-    <div class="wrap" style="top:430px">
-      <div class="kicker rv" data-d="0.1">02 · El terreno</div>
-      <h2 class="rv" data-d="0.28" style="margin-top:22px">Se adapta a<br>tu terreno</h2>
+    <div class="col" style="top:296px">
+      <div class="eyebrow rv" data-d="0.25">02 · El terreno</div>
+      <div class="rule" id="r3" style="margin-top:26px"></div>
+      <div class="title rv" data-d="0.50" style="margin-top:46px">Se adapta a</div>
+      <div class="title rv" data-d="0.70">la pendiente.</div>
+      <div class="support rv" data-d="1.15" style="margin-top:44px">La carga baja al <b>suelo firme.</b></div>
     </div>
-    <svg id="s3svg" width="1080" height="470" style="position:absolute;left:0;top:700px" viewBox="0 0 1080 470"></svg>
-    <div class="wrap" style="top:1210px">
-      <div class="bul rv" data-d="2.5"><div class="dot"></div><div class="tx">Sin <b>movimiento de tierra</b> ni excavación masiva</div></div>
-      <div class="bul rv" data-d="2.8"><div class="dot"></div><div class="tx">La carga baja al <b>suelo firme</b>, no al relleno</div></div>
-      <div class="bul rv" data-d="3.1"><div class="dot"></div><div class="tx">Nivela <b>pendientes</b> y suelos irregulares</div></div>
-    </div>
+    <svg id="v3" width="1080" height="560" style="position:absolute;left:0;top:890px" viewBox="0 0 1080 560"></svg>
   </div>
 
-  <!-- ================= S4 AGUA ================= -->
+  <!-- ============ 4 · LAS LLUVIAS ============ -->
   <div class="scene" id="s4">
-    <div class="wrap" style="top:430px">
-      <div class="kicker rv" data-d="0.1">03 · Las lluvias</div>
-      <h2 class="rv" data-d="0.28" style="margin-top:22px">El agua pasa<br>por debajo</h2>
+    <div class="col" style="top:296px">
+      <div class="eyebrow rv" data-d="0.25">03 · Las lluvias</div>
+      <div class="rule" id="r4" style="margin-top:26px"></div>
+      <div class="title rv" data-d="0.50" style="margin-top:46px">El agua pasa</div>
+      <div class="title rv" data-d="0.70">por debajo.</div>
+      <div class="support rv" data-d="1.15" style="margin-top:44px">Sin pozas ni <b>humedad que suba.</b></div>
     </div>
-    <svg id="s4svg" width="1080" height="520" style="position:absolute;left:0;top:690px" viewBox="0 0 1080 520"></svg>
-    <div class="wrap" style="top:1250px">
-      <div class="bul rv" data-d="3.3"><div class="dot"></div><div class="tx">Escurrimiento libre: <b>no se acumula agua</b></div></div>
-      <div class="bul rv" data-d="3.6"><div class="dot"></div><div class="tx">Corta la <b>humedad por capilaridad</b> del suelo</div></div>
-    </div>
+    <svg id="v4" width="1080" height="560" style="position:absolute;left:0;top:890px" viewBox="0 0 1080 560"></svg>
   </div>
 
-  <!-- ================= S5 TEMPERATURA ================= -->
+  <!-- ============ 5 · LA TEMPERATURA ============ -->
   <div class="scene" id="s5">
-    <div class="wrap" style="top:430px">
-      <div class="kicker rv" data-d="0.1">04 · La temperatura</div>
-      <h2 class="rv" data-d="0.28" style="margin-top:22px">Piso más cálido,<br>menos humedad</h2>
+    <div class="col" style="top:296px">
+      <div class="eyebrow rv" data-d="0.25">04 · La temperatura</div>
+      <div class="rule" id="r5" style="margin-top:26px"></div>
+      <div class="title rv" data-d="0.50" style="margin-top:46px">Una cámara</div>
+      <div class="title rv" data-d="0.70">de aire ventilada.</div>
+      <div class="support rv" data-d="1.15" style="margin-top:44px">Piso más cálido. <b>Menos humedad.</b></div>
     </div>
-    <svg id="s5svg" width="1080" height="500" style="position:absolute;left:0;top:700px" viewBox="0 0 1080 500"></svg>
-    <div class="wrap" style="top:1230px">
-      <div class="bul rv" data-d="2.5"><div class="dot"></div><div class="tx"><b>Cámara de aire ventilada</b> bajo el piso</div></div>
-      <div class="bul rv" data-d="2.8"><div class="dot"></div><div class="tx">Corta el <b>frío del suelo</b> en invierno</div></div>
-      <div class="bul rv" data-d="3.1"><div class="dot"></div><div class="tx">Menos <b>condensación, hongos y olor a humedad</b></div></div>
-    </div>
+    <svg id="v5" width="1080" height="560" style="position:absolute;left:0;top:890px" viewBox="0 0 1080 560"></svg>
   </div>
 
-  <!-- ================= S6 DURABILIDAD ================= -->
+  <!-- ============ 6 · EL TIEMPO ============ -->
   <div class="scene" id="s6">
-    <div class="wrap" style="top:430px">
-      <div class="kicker rv" data-d="0.1">05 · La durabilidad</div>
-      <h2 class="rv" data-d="0.28" style="margin-top:22px">Lo que el PVC<br>no deja entrar</h2>
+    <div class="col" style="top:296px">
+      <div class="eyebrow rv" data-d="0.25">05 · El tiempo</div>
+      <div class="rule" id="r6" style="margin-top:26px"></div>
+      <div class="title rv" data-d="0.50" style="margin-top:46px">No se pudre.</div>
+      <div class="title rv" data-d="0.70">No se oxida.</div>
+      <div class="support rv" data-d="1.15" style="margin-top:44px">Durabilidad <b>sin mantención.</b></div>
     </div>
-    <svg id="s6svg" width="1080" height="560" style="position:absolute;left:0;top:720px" viewBox="0 0 1080 560"></svg>
-    <div class="wrap" style="top:1380px">
-      <div class="chip good rv" data-d="3.1">PVC + hormigón confinado: durabilidad sin mantención</div>
-    </div>
+    <svg id="v6" width="1080" height="540" style="position:absolute;left:0;top:900px" viewBox="0 0 1080 540"></svg>
   </div>
 
-  <!-- ================= S7 OBRA ================= -->
+  <!-- ============ 7 · CIERRE ============ -->
   <div class="scene" id="s7">
-    <div class="wrap" style="top:430px">
-      <div class="kicker rv" data-d="0.1">06 · La obra</div>
-      <h2 class="rv" data-d="0.28" style="margin-top:22px">Rápida, limpia<br>y reversible</h2>
-    </div>
-    <svg id="s7svg" width="1080" height="330" style="position:absolute;left:0;top:740px" viewBox="0 0 1080 330"></svg>
-    <div class="wrap" style="top:1140px">
-      <div class="bul rv" data-d="1.9"><div class="dot"></div><div class="tx">Se instala <b>en seco</b>, sin esperar fraguados masivos</div></div>
-      <div class="bul rv" data-d="2.2"><div class="dot"></div><div class="tx">Menos <b>escombros</b> y menos camiones de tierra</div></div>
-      <div class="bul rv" data-d="2.5"><div class="dot"></div><div class="tx">Mínima <b>huella sobre el terreno natural</b></div></div>
+    <svg id="v7" width="1080" height="300" style="position:absolute;left:0;top:560px" viewBox="0 0 1080 300"></svg>
+    <img id="lk" src="brand/logo-04.png" alt=""
+         style="position:absolute;left:243px;top:940px;width:594px;opacity:0">
+    <div class="col" style="top:1250px;text-align:center">
+      <div class="support rv" data-d="1.30" style="font-size:52px;color:var(--niebla)">Cotiza en neorigen.cl</div>
     </div>
   </div>
 
-  <!-- ================= S8 CTA ================= -->
-  <div class="scene" id="s8">
-    <svg id="s8svg" width="1080" height="300" style="position:absolute;left:0;top:560px" viewBox="0 0 1080 300"></svg>
-    <div class="wrap" style="top:900px;text-align:center">
-      <div class="rv" data-d="0.45" style="font-size:88px;font-weight:900;letter-spacing:.14em">NEORIGEN</div>
-      <div class="rv" data-d="0.7" style="font-size:38px;font-weight:600;color:var(--ink2);margin-top:26px">Construimos desde el suelo firme.</div>
-      <div id="s8line" style="height:6px;width:0;margin:54px auto 0;border-radius:6px;background:linear-gradient(90deg,transparent,var(--or),transparent)"></div>
-      <div class="rv" data-d="1.35" style="font-size:62px;font-weight:900;margin-top:56px;color:var(--or)">neorigen.cl</div>
-      <div class="rv" data-d="1.6" style="font-size:34px;font-weight:700;color:var(--ink2);margin-top:30px;letter-spacing:.04em">Cotiza tu proyecto por mensaje directo</div>
-    </div>
-  </div>
-
-  <!-- ================= chrome ================= -->
-  <div id="chrome">
-    <div id="brand"><div class="mk"></div><div class="tx">NEORIGEN</div></div>
-    <div id="pbarw"><div id="pbar"></div></div>
-    <div id="foot"><div>PILOTES DE PVC + HORMIGÓN</div><div>neorigen.cl</div></div>
-  </div>
 </div>
 
 <script>
-/* ============================================================
-   Deterministic timeline. renderFrame(T) fully rebuilds state.
-   ============================================================ */
+/* ===========================================================
+   Línea de tiempo determinista: renderFrame(t) dibuja el
+   estado exacto del segundo t. Sin CSS animations ni rAF.
+   =========================================================== */
 const NS='http://www.w3.org/2000/svg';
 const cl=(v,a=0,b=1)=>v<a?a:(v>b?b:v);
 const lp=(a,b,t)=>a+(b-a)*t;
-const E={
-  out:t=>1-Math.pow(1-t,3),
-  out5:t=>1-Math.pow(1-t,5),
-  io:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,
-  back:t=>{const c=2.2;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)},
-  elastic:t=>t<=0?0:t>=1?1:Math.pow(2,-9*t)*Math.sin((t*9-.75)*(2*Math.PI/3))+1
-};
-// sub-animation progress: starts at s, lasts d
 const sg=(t,s,d)=>cl((t-s)/d);
 
+/* cubic-bezier del manual (§7) */
+function cb(x1,y1,x2,y2){
+  const A=(a,b)=>1-3*b+3*a, B=(a,b)=>3*b-6*a, C=a=>3*a;
+  const f=(t,a,b)=>((A(a,b)*t+B(a,b))*t+C(a))*t;
+  const d=(t,a,b)=>3*A(a,b)*t*t+2*B(a,b)*t+C(a);
+  return x=>{ if(x<=0)return 0; if(x>=1)return 1;
+    let t=x; for(let i=0;i<8;i++){const s=d(t,x1,x2); if(Math.abs(s)<1e-6)break; t-=(f(t,x1,x2)-x)/s;}
+    return f(cl(t),y1,y2); };
+}
+const EOUT = cb(0.22,1,0.36,1);     // entradas
+const EIO  = cb(0.65,0,0.35,1);     // transiciones
+
+const C={azul:'#011E2F',niebla:'#F1F4F3',pino:'#3C4A3E',madera:'#A9764A',amarillo:'#FFEDA0',
+         i85:'#27404E',i70:'#4D626D',i50:'#808E97',i30:'#B3BCC1',i20:'#CCD2D5'};
+
 const SCENES=[
-  {id:'s1',start:0.0, dur:3.9},
-  {id:'s2',start:3.6, dur:5.8},
-  {id:'s3',start:9.1, dur:6.0},
-  {id:'s4',start:14.8,dur:6.0},
-  {id:'s5',start:20.5,dur:5.9},
-  {id:'s6',start:26.1,dur:5.0},
-  {id:'s7',start:30.8,dur:4.2},
-  {id:'s8',start:34.7,dur:4.8}
+  {id:'s1',start:0.0, dur:4.6},
+  {id:'s2',start:4.2, dur:7.2},
+  {id:'s3',start:11.0,dur:7.2},
+  {id:'s4',start:17.8,dur:7.2},
+  {id:'s5',start:24.6,dur:7.2},
+  {id:'s6',start:31.4,dur:6.6},
+  {id:'s7',start:37.6,dur:5.4}
 ];
-const TOTAL=39.5;
-const FADE=0.34;
+const TOTAL=43.0, FADE=0.40;
 
 const $=id=>document.getElementById(id);
-const el={};
-SCENES.forEach((s,i)=>{el[s.id]=$(s.id);el[s.id].style.zIndex=10+i});
-$('chrome').style.zIndex=90;
+const el={}; SCENES.forEach((s,i)=>{el[s.id]=$(s.id); el[s.id].style.zIndex=10+i;});
 
-/* ---------- small svg helpers ---------- */
-function mk(tag,attrs,parent){const n=document.createElementNS(NS,tag);
-  for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n}
-function txt(parent,x,y,s,o={}){const n=mk('text',{x,y,fill:o.fill||'#AFC0D4',
-  'font-size':o.fs||26,'font-weight':o.fw||700,'text-anchor':o.ta||'start',
-  'letter-spacing':o.ls||'.04em'},parent);n.textContent=s;return n}
-function checkIcon(host){host.innerHTML='<svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5.2 5.2L20 6.8" stroke="#27D9A3" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-document.querySelectorAll('.bul .dot').forEach(checkIcon);
-
-/* ============================ SCENE 1 ============================ */
-const g1=$('s1svg');
-(function(){
-  g1.innerHTML='';
-  const d=mk('defs',{},g1);
-  const p=mk('pattern',{id:'hx',width:18,height:18,patternTransform:'rotate(45)',patternUnits:'userSpaceOnUse'},d);
-  mk('line',{x1:0,y1:0,x2:0,y2:18,stroke:'#6E5540','stroke-width':6,opacity:.42},p);
-  // ground
-  const grd=mk('g',{id:'g1ground'},g1);
-  mk('rect',{x:0,y:360,width:1080,height:200,fill:'#2A2018'},grd);
-  mk('rect',{x:0,y:360,width:1080,height:200,fill:'url(#hx)'},grd);
-  mk('rect',{x:0,y:356,width:1080,height:8,fill:'#53402F'},grd);
-  // house group (lifts up)
-  const h=mk('g',{id:'g1house'},g1);
-  // piles
-  [[352],[540],[728]].forEach(a=>{
-    mk('rect',{x:a[0]-20,y:252,width:40,height:112,rx:9,fill:'#EDF2F7'},h);
-    mk('rect',{x:a[0]-11,y:258,width:22,height:100,rx:6,fill:'#9FADBB',opacity:.75},h);
-  });
-  // slab + body
-  mk('rect',{x:290,y:228,width:500,height:30,rx:8,fill:'#C9D3DE'},h);
-  const body=mk('rect',{x:310,y:118,width:460,height:116,rx:7,fill:'#1E3147',stroke:'#38506E','stroke-width':4},h);
-  const roof=mk('path',{d:'M284 122 L540 30 L796 122 Z',fill:'#27405E',stroke:'#3E5A7D','stroke-width':4,'stroke-linejoin':'round'},h);
-  h.appendChild(roof);
-  // windows
-  mk('rect',{x:382,y:150,width:72,height:58,rx:6,fill:'#FF7A1A',opacity:.9},h);
-  mk('rect',{x:504,y:150,width:72,height:58,rx:6,fill:'#FF7A1A',opacity:.9},h);
-  mk('rect',{x:626,y:150,width:72,height:58,rx:6,fill:'#FFA95C',opacity:.75},h);
-  // airflow arrows under house
-  const air=mk('g',{id:'g1air'},g1);
-  for(let i=0;i<4;i++){
-    mk('path',{id:'g1a'+i,d:'M0 0 h70',stroke:'#3FA9F5','stroke-width':6,'stroke-linecap':'round',opacity:0},air);
-  }
-})();
-function S1(t,p){
-  const u=$('s1ul'); u.style.width=(E.out5(sg(t,.95,.7))*640)+'px';
-  const lift=E.out(sg(t,.55,1.25));
-  $('g1house').setAttribute('transform','translate(0,'+lp(96,0,lift)+')');
-  $('g1ground').style.opacity=E.out(sg(t,.2,.6));
-  for(let i=0;i<4;i++){
-    const a=$('g1a'+i), st=1.5+i*.12, pr=sg(t,st,1.6);
-    const x=lp(170,760,((pr*1.0+i*.25)%1));
-    a.setAttribute('transform','translate('+x+','+(300+i*16)+')');
-    a.setAttribute('opacity', pr>0 ? .55*Math.sin(Math.PI*((pr*1.0+i*.25)%1)) : 0);
-  }
+function mk(tag,at,p){const n=document.createElementNS(NS,tag);
+  for(const k in at)n.setAttribute(k,at[k]); if(p)p.appendChild(n); return n;}
+/* trazo de plano: se dibuja solo */
+function stroke(p,d,o={}){
+  return mk('path',{d,fill:'none',stroke:o.c||C.niebla,'stroke-width':o.w||3,
+    'stroke-linecap':o.cap||'round','stroke-linejoin':'round',pathLength:1,
+    'stroke-dasharray':1,'stroke-dashoffset':1,opacity:o.op==null?1:o.op},p);
+}
+function draw(n,p){ n.setAttribute('stroke-dashoffset', 1-EOUT(p)); }
+function drawAll(g,p){ g.querySelectorAll('path[pathLength]').forEach(n=>draw(n,p)); }
+function lbl(p,x,y,s,o={}){const n=mk('text',{x,y,fill:o.c||C.i30,'font-size':o.fs||32,
+  'text-anchor':o.ta||'start'},p); n.textContent=s; return n;}
+/* terreno: relleno Verde Pino + rayado Madera */
+function ground(p,topPath,fillTo,id){
+  const g=mk('g',{id},p);
+  mk('path',{d:topPath+' L1080 '+fillTo+' L0 '+fillTo+' Z',fill:C.pino},g);
+  mk('path',{d:topPath+' L1080 '+fillTo+' L0 '+fillTo+' Z',fill:'url(#hatch)'},g);
+  return g;
+}
+function defs(svg){
+  const d=mk('defs',{},svg);
+  const pt=mk('pattern',{id:'hatch',width:26,height:26,patternUnits:'userSpaceOnUse',
+    patternTransform:'rotate(45)'},d);
+  mk('line',{x1:0,y1:0,x2:0,y2:26,stroke:C.madera,'stroke-width':3,opacity:.3},pt);
+  return d;
+}
+/* pilote en corte: tubo PVC + hormigón, de (x,yTop) a (x,yBot) */
+function pile(p,x,yTop,yBot,w){
+  w=w||38; const g=mk('g',{},p);
+  mk('rect',{x:x-w/2,y:yTop,width:w,height:yBot-yTop,rx:w/2,fill:C.azul,
+    stroke:C.niebla,'stroke-width':3},g);
+  mk('rect',{x:x-w/2+9,y:yTop+9,width:w-18,height:yBot-yTop-18,rx:(w-18)/2,fill:C.i50,opacity:.55},g);
+  return g;
 }
 
-/* ============================ SCENE 2 ============================ */
-const g2=$('s2svg');
-(function(){
-  g2.innerHTML='';
-  const d=mk('defs',{},g2);
-  const lg=mk('linearGradient',{id:'pvcg',x1:0,y1:0,x2:1,y2:0},d);
-  mk('stop',{offset:0,'stop-color':'#C9D4DF'},lg);
-  mk('stop',{offset:.28,'stop-color':'#FFFFFF'},lg);
-  mk('stop',{offset:.62,'stop-color':'#E6EDF3'},lg);
-  mk('stop',{offset:1,'stop-color':'#9FAEBC'},lg);
-  const cg=mk('linearGradient',{id:'cong',x1:0,y1:0,x2:1,y2:0},d);
-  mk('stop',{offset:0,'stop-color':'#8E9AA6'},cg);
-  mk('stop',{offset:.35,'stop-color':'#C3CDD8'},cg);
-  mk('stop',{offset:1,'stop-color':'#7E8A97'},cg);
-  const cp=mk('clipPath',{id:'tubeclip'},d);
-  mk('rect',{x:472,y:92,width:136,height:530,rx:14},cp);
-
-  // tube outer
-  mk('rect',{id:'g2tube',x:458,y:78,width:164,height:558,rx:22,fill:'url(#pvcg)'},g2);
-  mk('rect',{x:472,y:92,width:136,height:530,rx:14,fill:'#182334'},g2);
-  // inner cavity + concrete fill (clipped, animated y)
-  const gi=mk('g',{'clip-path':'url(#tubeclip)'},g2);
-  mk('rect',{id:'g2fill',x:472,y:622,width:136,height:0,fill:'url(#cong)'},gi);
-  mk('path',{id:'g2wave',d:'',fill:'#D7E0E9'},gi);
-  // rebar cage
-  const rb=mk('g',{id:'g2rebar',opacity:0},gi);
-  [500,540,580].forEach(x=>mk('line',{x1:x,y1:104,x2:x,y2:612,stroke:'#FF7A1A','stroke-width':7,opacity:.95},rb));
-  for(let y=132;y<612;y+=68)mk('rect',{x:494,y:y,width:92,height:9,rx:4,fill:'#FF9A4D'},rb);
-  // highlight + rim
-  mk('rect',{x:486,y:96,width:16,height:520,rx:8,fill:'#fff',opacity:.5},g2);
-  mk('rect',{id:'g2rim',x:452,y:68,width:176,height:34,rx:16,fill:'#F4F8FB',stroke:'#AFBDCA','stroke-width':3},g2);
-  // pour stream
-  mk('rect',{id:'g2pour',x:528,y:-120,width:24,height:200,rx:12,fill:'#D7E0E9',opacity:0},g2);
-  // labels
-  const L=mk('g',{id:'g2l1',opacity:0},g2);
-  mk('path',{d:'M452 206 H352',stroke:'#FF7A1A','stroke-width':4},L);
-  mk('circle',{cx:452,cy:206,r:9,fill:'#FF7A1A'},L);
-  txt(L,336,196,'TUBO DE PVC',{fill:'#FFB27A',fs:30,fw:900,ta:'end',ls:'.1em'});
-  txt(L,336,238,'Encofrado permanente',{fill:'#9FB3C9',fs:25,fw:600,ta:'end'});
-  txt(L,336,270,'y barrera a la humedad',{fill:'#9FB3C9',fs:25,fw:600,ta:'end'});
-  const R=mk('g',{id:'g2l2',opacity:0},g2);
-  mk('path',{d:'M628 430 H768',stroke:'#27D9A3','stroke-width':4},R);
-  mk('circle',{cx:628,cy:430,r:9,fill:'#27D9A3'},R);
-  txt(R,784,420,'HORMIGÓN',{fill:'#7FEBC8',fs:30,fw:900,ls:'.1em'});
-  txt(R,784,462,'Armado y confinado:',{fill:'#9FB3C9',fs:25,fw:600});
-  txt(R,784,494,'alta resistencia',{fill:'#9FB3C9',fs:25,fw:600});
-  // soil at base
-  mk('rect',{id:'g2soil',x:0,y:636,width:1080,height:100,fill:'#2A2018'},g2);
+/* ===================== 1 · GANCHO ===================== */
+(function(){ const s=$('v1'); defs(s);
+  ground(s,'M0 430 L1080 430',600,'g1soil');
+  const g=mk('g',{id:'g1line'},s);
+  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  // pilotes
+  [344,452,560,668].forEach(x=>{
+    stroke(g,'M'+(x-17)+' 306 V496 M'+(x+17)+' 306 V496',{w:3});
+  });
+  // plataforma, cuerpo y techo (trazo de plano)
+  stroke(g,'M286 284 H734 V306 H286 Z',{w:3});
+  stroke(g,'M306 160 V284 M714 160 V284',{w:3});
+  stroke(g,'M292 162 L728 104 V162 Z',{w:3});
+  // ventanas en Madera
+  stroke(g,'M352 196 h104 v70 h-104 Z M520 196 h104 v70 h-104 Z',{c:C.madera,w:3});
 })();
-function S2(t,p){
-  const grow=E.out(sg(t,.5,.55));
-  $('g2tube').setAttribute('transform','translate(540,636) scale(1,'+grow+') translate(-540,-636)');
-  $('g2rim').setAttribute('opacity',grow>.98?1:0);
-  const rb=$('g2rebar'); rb.setAttribute('opacity',E.out(sg(t,1.0,.4))*.95);
-  const po=$('g2pour'), pa=sg(t,1.25,.25)-sg(t,2.5,.3);
-  po.setAttribute('opacity',cl(pa));
-  po.setAttribute('y',lp(-120,40,E.out(sg(t,1.25,.3))));
-  const f=E.io(sg(t,1.4,1.35));          // fill 0..1
-  const h=530*f, y=622-h;
-  const fl=$('g2fill'); fl.setAttribute('y',y); fl.setAttribute('height',h);
-  const w=$('g2wave');
-  if(f>0.01&&f<1){const a=7*Math.sin(t*9);
-    w.setAttribute('d','M472 '+(y+10)+' Q 506 '+(y-10+a)+' 540 '+(y+2)+' T 608 '+(y+8)+' V '+(y+26)+' H 472 Z');
-    w.setAttribute('opacity',1);}
-  else w.setAttribute('opacity',0);
-  $('g2l1').setAttribute('opacity',E.out(sg(t,2.15,.45)));
-  $('g2l2').setAttribute('opacity',E.out(sg(t,2.45,.45)));
-  $('g2soil').setAttribute('opacity',E.out(sg(t,.3,.5)));
+function S1(t){
+  $('r1').style.width = EOUT(sg(t,.30,.70))*120+'px';
+  $('g1soil').style.opacity = EOUT(sg(t,.15,.60));
+  drawAll($('g1line'), sg(t,.20,2.30));
 }
 
-/* ============================ SCENE 3 ============================ */
-const g3=$('s3svg');
-const PIL=[[180,250],[358,214],[536,176],[714,138],[892,100]]; // x, ground y (slope)
-(function(){
-  g3.innerHTML='';
-  const d=mk('defs',{},g3);
-  const p=mk('pattern',{id:'hx3',width:18,height:18,patternTransform:'rotate(45)',patternUnits:'userSpaceOnUse'},d);
-  mk('line',{x1:0,y1:0,x2:0,y2:18,stroke:'#8B6B4C','stroke-width':6,opacity:.4},p);
-  // slope soil
-  const sp='M0 260 C 220 258, 300 212, 440 190 C 600 164, 760 126, 1080 92 L1080 470 L0 470 Z';
-  mk('path',{id:'g3soil',d:sp,fill:'#2D2219'},g3);
-  mk('path',{d:sp,fill:'url(#hx3)',opacity:.35},g3);
-  mk('path',{id:'g3line',d:'M0 260 C 220 258, 300 212, 440 190 C 600 164, 760 126, 1080 92',
-    stroke:'#5C4733','stroke-width':8,fill:'none','stroke-linecap':'round'},g3);
-  // firm stratum
-  const fm=mk('g',{id:'g3firm'},g3);
-  mk('rect',{x:0,y:378,width:1080,height:92,fill:'#443225'},fm);
-  mk('rect',{x:0,y:374,width:1080,height:7,fill:'#7C6047'},fm);
-  const tf=txt(g3,32,462,'SUELO FIRME',{fill:'#B08A63',fs:26,fw:900,ls:'.18em'});tf.id='g3tf';
-  // piles
-  const pg=mk('g',{id:'g3piles'},g3);
-  PIL.forEach((a,i)=>{
-    const g=mk('g',{id:'g3p'+i,opacity:0},pg);
-    mk('rect',{x:a[0]-19,y:60,width:38,height:(436-60),rx:9,fill:'#EDF2F7'},g);
-    mk('rect',{x:a[0]-10,y:66,width:20,height:(430-66),rx:6,fill:'#A6B4C2',opacity:.7},g);
-    mk('rect',{x:a[0]-25,y:52,width:50,height:18,rx:8,fill:'#F6F9FB'},g);
-    const pf=mk('g',{id:'g3d'+i,opacity:0},pg);
-    mk('ellipse',{cx:a[0],cy:a[1],rx:28,ry:7,fill:'#8B6B4C',opacity:.45},pf);
-  });
-  // platform
-  const pl=mk('g',{id:'g3plat',opacity:0},g3);
-  mk('rect',{x:120,y:26,width:852,height:30,rx:9,fill:'#C9D3DE'},pl);
-  mk('rect',{x:120,y:26,width:852,height:9,rx:5,fill:'#EEF3F8'},pl);
-  // level badge
-  const lv=mk('g',{id:'g3lv',opacity:0},g3);
-  mk('rect',{x:684,y:-56,width:316,height:56,rx:18,fill:'#0E1829',stroke:'#27D9A3','stroke-width':3},lv);
-  mk('circle',{cx:722,cy:-28,r:11,fill:'#27D9A3'},lv);
-  txt(lv,748,-19,'100% NIVELADO',{fill:'#8FF0D2',fs:25,fw:900,ls:'.06em'});
+/* ===================== 2 · EL PILOTE ===================== */
+(function(){ const s=$('v2'); defs(s);
+  ground(s,'M0 430 L1080 430',560,'g2soil');
+  const g=mk('g',{id:'g2line'},s);
+  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  // tubo en corte
+  const X=300, TOP=40, BOT=500;
+  mk('rect',{id:'g2tube',x:X-46,y:TOP,width:92,height:BOT-TOP,rx:46,fill:C.azul},s);
+  s.appendChild(g);
+  stroke(g,'M'+(X-46)+' '+TOP+' a46 46 0 0 1 92 0 V'+BOT+' a46 46 0 0 1 -92 0 Z',{w:3});
+  // hormigón (sube)
+  const clip=mk('clipPath',{id:'cl2'},s.querySelector('defs'));
+  mk('rect',{x:X-38,y:TOP+8,width:76,height:BOT-TOP-16,rx:38},clip);
+  const gi=mk('g',{'clip-path':'url(#cl2)'},s);
+  mk('rect',{id:'g2fill',x:X-38,y:BOT,width:76,height:0,fill:C.i50,opacity:.5},gi);
+  mk('path',{id:'g2top',d:'',stroke:C.niebla,'stroke-width':3,fill:'none'},gi);
+  // acotación + rótulos
+  const a=mk('g',{id:'g2ann'},s);
+  stroke(a,'M'+(X+56)+' 150 H470',{c:C.madera,w:2});
+  stroke(a,'M'+(X+56)+' 330 H470',{c:C.madera,w:2});
+  lbl(a,490,142,'TUBO DE PVC',{c:C.niebla});
+  lbl(a,490,184,'ENCOFRADO Y BARRERA',{c:C.i50});
+  lbl(a,490,322,'HORMIGÓN ARMADO',{c:C.niebla});
+  lbl(a,490,364,'CONFINADO EN EL TUBO',{c:C.i50});
 })();
-function S3(t,p){
-  $('g3soil').setAttribute('opacity',E.out(sg(t,.15,.5)));
-  $('g3line').setAttribute('opacity',E.out(sg(t,.15,.5)));
-  $('g3firm').setAttribute('opacity',E.out(sg(t,.45,.5)));
-  $('g3tf').setAttribute('opacity',E.out(sg(t,.7,.5)));
-  PIL.forEach((a,i)=>{
-    const st=.9+i*.17, pr=E.out(sg(t,st,.52));
-    const g=$('g3p'+i);
-    g.setAttribute('opacity',pr>0?1:0);
-    g.setAttribute('transform','translate(0,'+lp(-320,0,pr)+')');
-    const dp=sg(t,st+.42,.55);
-    const df=$('g3d'+i);
-    df.setAttribute('opacity',dp>0&&dp<1?Math.sin(Math.PI*dp)*.9:0);
-    df.setAttribute('transform','translate(0,0) scale('+lp(.5,1.5,dp)+',1) translate('+(-a[0]*(lp(.5,1.5,dp)-1)/lp(.5,1.5,dp))*0+',0)');
-    df.setAttribute('transform','translate('+(a[0]*(1-lp(.5,1.6,dp)))+',0) scale('+lp(.5,1.6,dp)+',1)');
-  });
-  const pp=E.out(sg(t,1.95,.6));
-  const pl=$('g3plat'); pl.setAttribute('opacity',pp);
-  pl.setAttribute('transform','translate('+lp(-120,0,pp)+',0)');
-  $('g3lv').setAttribute('opacity',E.out(sg(t,2.35,.45)));
+function S2(t){
+  $('r2').style.width = EOUT(sg(t,.25,.70))*120+'px';
+  $('g2soil').style.opacity = EOUT(sg(t,.15,.60));
+  const dp = sg(t,.25,1.20);
+  $('g2tube').style.opacity = EOUT(dp);
+  drawAll($('g2line'), dp);
+  const f = EIO(sg(t,1.50,2.20)), TOP=40, BOT=500, H=(BOT-TOP-16)*f, y=BOT-8-H;
+  const r=$('g2fill'); r.setAttribute('y',y); r.setAttribute('height',H);
+  $('g2top').setAttribute('d', f>.02 && f<1 ? 'M262 '+y+' H338' : '');
+  const an=$('g2ann'); an.style.opacity = EOUT(sg(t,2.60,.70));
+  drawAll(an, sg(t,2.60,.80));
 }
 
-/* ============================ SCENE 4 ============================ */
-const g4=$('s4svg');
-(function(){
-  g4.innerHTML='';
-  const d=mk('defs',{},g4);
-  const wg=mk('linearGradient',{id:'wg',x1:0,y1:0,x2:0,y2:1},d);
-  mk('stop',{offset:0,'stop-color':'#63BDF8','stop-opacity':.95},wg);
-  mk('stop',{offset:1,'stop-color':'#1E72B8','stop-opacity':.85},wg);
-  const cpL=mk('clipPath',{id:'clL'},d); mk('rect',{x:0,y:0,width:520,height:520},cpL);
-  const cpR=mk('clipPath',{id:'clR'},d); mk('rect',{x:560,y:0,width:520,height:520},cpR);
-
-  // ---------- LEFT: slab on grade ----------
-  const L=mk('g',{id:'g4L','clip-path':'url(#clL)'},g4);
-  mk('rect',{x:0,y:352,width:520,height:168,fill:'#2D2219'},L);
-  mk('rect',{x:0,y:348,width:520,height:8,fill:'#53402F'},L);
-  mk('rect',{x:96,y:322,width:330,height:30,rx:5,fill:'#A9B4BF'},L);   // radier
-  mk('rect',{x:116,y:214,width:290,height:110,rx:6,fill:'#1E3147',stroke:'#38506E','stroke-width':4},L);
-  mk('path',{d:'M94 216 L261 150 L428 216 Z',fill:'#27405E',stroke:'#3E5A7D','stroke-width':4,'stroke-linejoin':'round'},L);
-  mk('rect',{x:168,y:240,width:52,height:44,rx:5,fill:'#FF7A1A',opacity:.55},L);
-  mk('rect',{x:300,y:240,width:52,height:44,rx:5,fill:'#FF7A1A',opacity:.55},L);
-  mk('rect',{id:'g4pool',x:0,y:352,width:520,height:0,fill:'url(#wg)'},L);
-  mk('path',{id:'g4poolw',d:'',fill:'#7FCCFA',opacity:.9},L);
-
-  // ---------- RIGHT: on piles ----------
-  const R=mk('g',{id:'g4R','clip-path':'url(#clR)'},g4);
-  mk('rect',{x:560,y:352,width:520,height:168,fill:'#2D2219'},R);
-  mk('rect',{x:560,y:348,width:520,height:8,fill:'#53402F'},R);
-  [660,820,980].forEach(x=>{
-    mk('rect',{x:x-17,y:256,width:34,height:96,rx:8,fill:'#EDF2F7'},R);
-    mk('rect',{x:x-9,y:262,width:18,height:86,rx:5,fill:'#A6B4C2',opacity:.7},R);
+/* ===================== 3 · EL TERRENO ===================== */
+const SLOPE='M0 362 C 240 358, 330 318, 470 296 C 630 270, 800 232, 1080 206';
+const P3=[[180,352],[350,318],[520,288],[690,252],[860,222]];
+(function(){ const s=$('v3'); defs(s);
+  ground(s,SLOPE,560,'g3soil');
+  const g=mk('g',{id:'g3line'},s);
+  stroke(g,SLOPE,{c:C.madera,w:3});
+  stroke(g,'M0 470 H1080',{c:C.madera,w:2,op:.7});     // estrato firme
+  P3.forEach((p,i)=>{
+    const gp=mk('g',{id:'g3p'+i},s);
+    stroke(gp,'M'+(p[0]-17)+' 150 V502 M'+(p[0]+17)+' 150 V502',{w:3});
   });
-  mk('rect',{x:616,y:228,width:408,height:28,rx:6,fill:'#C9D3DE'},R);
-  mk('rect',{x:636,y:124,width:368,height:106,rx:6,fill:'#1E3147',stroke:'#38506E','stroke-width':4},R);
-  mk('path',{d:'M614 126 L820 62 L1026 126 Z',fill:'#27405E',stroke:'#3E5A7D','stroke-width':4,'stroke-linejoin':'round'},R);
-  mk('rect',{x:700,y:150,width:56,height:48,rx:5,fill:'#FF7A1A',opacity:.9},R);
-  mk('rect',{x:884,y:150,width:56,height:48,rx:5,fill:'#FFA95C',opacity:.8},R);
-  // flowing water under
-  const fw=mk('g',{id:'g4flow'},R);
-  for(let i=0;i<7;i++)mk('path',{id:'g4f'+i,d:'M0 0 h86',stroke:'#63BDF8','stroke-width':7,'stroke-linecap':'round',opacity:0},fw);
-
-  // ---------- rain ----------
-  const rn=mk('g',{id:'g4rain'},g4);
-  for(let i=0;i<46;i++)mk('line',{id:'g4r'+i,x1:0,y1:0,x2:7,y2:26,stroke:'#8FD3FB','stroke-width':4,'stroke-linecap':'round',opacity:0},rn);
-
-  // ---------- verdict badges ----------
-  const bL=mk('g',{id:'g4bL',opacity:0},g4);
-  mk('rect',{x:48,y:432,width:420,height:62,rx:18,fill:'#1A0F14',stroke:'#FF4D5E','stroke-width':3},bL);
-  mk('path',{d:'M86 452l28 28M114 452l-28 28',stroke:'#FF4D5E','stroke-width':5,'stroke-linecap':'round'},bL);
-  txt(bL,140,474,'AGUA ESTANCADA',{fill:'#FFB3BA',fs:27,fw:900,ls:'.06em'});
-  const bR=mk('g',{id:'g4bR',opacity:0},g4);
-  mk('rect',{x:600,y:432,width:420,height:62,rx:18,fill:'#0A1A16',stroke:'#27D9A3','stroke-width':3},bR);
-  mk('path',{d:'M636 464l16 16 26-30',stroke:'#27D9A3','stroke-width':5,'stroke-linecap':'round','stroke-linejoin':'round',fill:'none'},bR);
-  txt(bR,696,474,'ESCURRE LIBRE',{fill:'#8FF0D2',fs:27,fw:900,ls:'.06em'});
-  // divider
-  mk('line',{id:'g4div',x1:540,y1:20,x2:540,y2:500,stroke:'#2C3E57','stroke-width':3,'stroke-dasharray':'12 14'},g4);
-  const t1=txt(g4,48,34,'PISO SOBRE EL SUELO',{fill:'#7A8DA6',fs:25,fw:900,ls:'.1em'});t1.id='g4t1';
-  const t2=txt(g4,600,34,'SOBRE PILOTES',{fill:'#7A8DA6',fs:25,fw:900,ls:'.1em'});t2.id='g4t2';
+  const pl=mk('g',{id:'g3plat'},s);
+  stroke(pl,'M150 128 H890 V150 H150 Z',{w:3});
+  const lv=mk('g',{id:'g3lv'},s);
+  lbl(lv,150,92,'PLATAFORMA NIVELADA',{c:C.niebla});
+  const nf=mk('g',{id:'g3nf'},s);
+  lbl(nf,20,536,'SUELO FIRME',{c:C.i50});
+  lbl(nf,950,536,'SIN MOVIMIENTO DE TIERRA',{c:C.i50,ta:'end'});
 })();
-function S4(t,p){
-  $('g4t1').setAttribute('opacity',E.out(sg(t,.3,.4)));
-  $('g4t2').setAttribute('opacity',E.out(sg(t,.4,.4)));
-  $('g4div').setAttribute('opacity',E.out(sg(t,.3,.5))*.9);
-  // rain
-  const ra=cl(sg(t,.55,.5)-sg(t,5.2,.5));
-  for(let i=0;i<46;i++){
-    const r=$('g4r'+i);
-    const x=(i*137%1080), sp=330+((i*53)%140), ph=((t*sp)/520+(i*0.173))%1;
-    r.setAttribute('transform','translate('+x+','+lp(-40,520,ph)+')');
-    r.setAttribute('opacity',ra*(.35+.4*((i%3)/2)));
+function S3(t){
+  $('r3').style.width = EOUT(sg(t,.25,.70))*120+'px';
+  $('g3soil').style.opacity = EOUT(sg(t,.15,.60));
+  drawAll($('g3line'), sg(t,.20,1.00));
+  P3.forEach((p,i)=>{ drawAll($('g3p'+i), sg(t,1.20+i*.22,.75)); });
+  drawAll($('g3plat'), sg(t,2.55,.80));
+  $('g3lv').style.opacity = EOUT(sg(t,3.20,.70));
+  $('g3nf').style.opacity = EOUT(sg(t,1.00,.70));
+}
+
+/* ===================== 4 · LAS LLUVIAS ===================== */
+(function(){ const s=$('v4'); defs(s);
+  ground(s,'M0 430 L1080 430',560,'g4soil');
+  // escurrimiento: va DETRÁS de los pilotes
+  const f=mk('g',{id:'g4flow'},s);
+  for(let i=0;i<5;i++) mk('line',{id:'g4f'+i,x1:0,y1:0,x2:104,y2:0,
+    stroke:C.niebla,'stroke-width':3,'stroke-linecap':'round',opacity:0},f);
+  const g=mk('g',{id:'g4line'},s);
+  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  [344,452,560,668].forEach(x=>stroke(g,'M'+(x-17)+' 306 V482 M'+(x+17)+' 306 V482',{w:3}));
+  stroke(g,'M286 284 H734 V306 H286 Z',{w:3});
+  stroke(g,'M306 160 V284 M714 160 V284',{w:3});
+  stroke(g,'M292 162 L728 104 V162 Z',{w:3});
+  // lluvia: recortada sobre la línea de terreno
+  const cp=mk('clipPath',{id:'cl4'},s.querySelector('defs'));
+  mk('rect',{x:-40,y:-60,width:1160,height:490},cp);
+  const r=mk('g',{id:'g4rain','clip-path':'url(#cl4)'},s);
+  for(let i=0;i<34;i++) mk('line',{id:'g4r'+i,x1:0,y1:0,x2:6,y2:30,
+    stroke:C.i50,'stroke-width':3,'stroke-linecap':'round',opacity:0},r);
+  const n=mk('g',{id:'g4nf'},s);
+  lbl(n,950,532,'SIN HUMEDAD POR CAPILARIDAD',{c:C.i50,ta:'end'});
+})();
+function S4(t){
+  $('r4').style.width = EOUT(sg(t,.25,.70))*120+'px';
+  $('g4soil').style.opacity = EOUT(sg(t,.15,.60));
+  drawAll($('g4line'), sg(t,.20,1.60));
+  const ra = cl(sg(t,1.00,.80) - sg(t,6.40,.60));
+  for(let i=0;i<34;i++){
+    const n=$('g4r'+i), x=(i*149)%1080, sp=300+((i*47)%110);
+    const ph=((t*sp)/500 + i*.191)%1;
+    n.setAttribute('transform','translate('+x+','+lp(-50,470,ph)+')');
+    n.setAttribute('opacity', ra*(.30+.35*((i%3)/2)));
   }
-  // pooling left
-  const pw=E.io(sg(t,1.0,2.2))*86;
-  const po=$('g4pool'); po.setAttribute('height',pw); po.setAttribute('y',352-pw);
-  const yv=352-pw;
-  $('g4poolw').setAttribute('d', pw>2 ? 'M0 '+(yv+8)+' Q 130 '+(yv-7+5*Math.sin(t*6))+' 260 '+(yv+4)+' T 520 '+(yv+8)+' V '+(yv+20)+' H 0 Z' : '');
-  // flow right
+  const fa = cl(sg(t,1.80,.80));
+  for(let i=0;i<5;i++){
+    const n=$('g4f'+i), ph=((t*.42 + i*.2)%1);
+    n.setAttribute('transform','translate('+lp(210,880,ph)+','+(336+(i%3)*30)+')');
+    n.setAttribute('opacity', fa*Math.sin(Math.PI*ph)*.8);
+  }
+  $('g4nf').style.opacity = EOUT(sg(t,2.40,.70));
+}
+
+/* ===================== 5 · LA TEMPERATURA ===================== */
+(function(){ const s=$('v5'); defs(s);
+  ground(s,'M0 430 L1080 430',560,'g5soil');
+  // el aire circula DETRÁS de los pilotes
+  const a=mk('g',{id:'g5air'},s);
+  for(let i=0;i<7;i++) mk('line',{id:'g5a'+i,x1:0,y1:0,x2:96,y2:0,
+    stroke:C.niebla,'stroke-width':3,'stroke-linecap':'round',opacity:0},a);
+  const g=mk('g',{id:'g5line'},s);
+  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  [230,390,550,710,870].forEach(x=>stroke(g,'M'+(x-17)+' 268 V482 M'+(x+17)+' 268 V482',{w:3}));
+  stroke(g,'M150 212 H950 V268 H150 Z',{w:3});            // piso + estructura
+  stroke(g,'M150 212 H950',{c:C.madera,w:3});             // capa de aislación
+  const n=mk('g',{id:'g5nf'},s);
+  lbl(n,150,186,'AISLACIÓN + PISO',{c:C.niebla});
+  lbl(n,950,532,'EL FRÍO DEL SUELO NO SUBE',{c:C.i50,ta:'end'});
+})();
+function S5(t){
+  $('r5').style.width = EOUT(sg(t,.25,.70))*120+'px';
+  $('g5soil').style.opacity = EOUT(sg(t,.15,.60));
+  drawAll($('g5line'), sg(t,.20,1.60));
+  const fa = cl(sg(t,1.70,.80));
   for(let i=0;i<7;i++){
-    const f=$('g4f'+i), st=1.0+i*.1, pr=sg(t,st,4.2);
-    const ph=((t*1.05+i*.19))%1;
-    f.setAttribute('transform','translate('+lp(560,1086,ph)+','+(286+(i%4)*17)+')');
-    f.setAttribute('opacity',pr>0?Math.sin(Math.PI*ph)*.85:0);
+    const n=$('g5a'+i), ph=((t*.38 + i*.1429)%1);
+    n.setAttribute('transform','translate('+lp(110,1000,ph)+','+(304+(i%4)*22)+')');
+    n.setAttribute('opacity', fa*Math.sin(Math.PI*ph)*.8);
   }
-  $('g4bL').setAttribute('opacity',E.out(sg(t,2.5,.45)));
-  $('g4bR').setAttribute('opacity',E.out(sg(t,2.8,.45)));
+  $('g5nf').style.opacity = EOUT(sg(t,2.30,.70));
 }
 
-/* ============================ SCENE 5 ============================ */
-const g5=$('s5svg');
-(function(){
-  g5.innerHTML='';
-  const d=mk('defs',{},g5);
-  const tg=mk('linearGradient',{id:'tg',x1:0,y1:1,x2:0,y2:0},d);
-  mk('stop',{offset:0,'stop-color':'#3FA9F5'},tg);
-  mk('stop',{offset:.5,'stop-color':'#FFC46B'},tg);
-  mk('stop',{offset:1,'stop-color':'#FF7A1A'},tg);
-  const p=mk('pattern',{id:'hx5',width:18,height:18,patternTransform:'rotate(45)',patternUnits:'userSpaceOnUse'},d);
-  mk('line',{x1:0,y1:0,x2:0,y2:18,stroke:'#8B6B4C','stroke-width':6,opacity:.35},p);
-
-  // soil
-  mk('rect',{x:0,y:372,width:1080,height:128,fill:'#2D2219'},g5);
-  mk('rect',{x:0,y:372,width:1080,height:128,fill:'url(#hx5)'},g5);
-  mk('rect',{x:0,y:368,width:1080,height:8,fill:'#53402F'},g5);
-  // piles
-  [150,330,510,690].forEach(x=>{
-    mk('rect',{x:x-19,y:244,width:38,height:132,rx:9,fill:'#EDF2F7'},g5);
-    mk('rect',{x:x-10,y:250,width:20,height:122,rx:6,fill:'#A6B4C2',opacity:.7},g5);
-  });
-  // floor assembly
-  mk('rect',{x:70,y:214,width:700,height:30,rx:7,fill:'#C9D3DE'},g5);
-  mk('rect',{x:70,y:208,width:700,height:10,rx:5,fill:'#EEF3F8'},g5);
-  mk('rect',{x:70,y:186,width:700,height:24,rx:6,fill:'#FFB27A',opacity:.9},g5); // aislación
-  const ti=txt(g5,92,172,'AISLACIÓN + PISO',{fill:'#FFD0A8',fs:24,fw:900,ls:'.1em'});ti.id='g5ti';
-  // air arrows
-  const ag=mk('g',{id:'g5air'},g5);
-  for(let i=0;i<6;i++)mk('path',{id:'g5a'+i,d:'M0 0 h74',stroke:'#3FA9F5','stroke-width':7,'stroke-linecap':'round',opacity:0},ag);
-  // damp blocked
-  const dg=mk('g',{id:'g5damp'},g5);
-  [478,572,652].forEach((x,i)=>{
-    mk('path',{id:'g5d'+i,d:'M'+x+' 366 q 10 -22 0 -44 q -10 -22 0 -44',stroke:'#4FD39A','stroke-width':6,fill:'none','stroke-linecap':'round',opacity:0},dg);
-  });
-  // air chamber label
-  const ch=mk('g',{id:'g5ch',opacity:0},g5);
-  mk('rect',{x:150,y:274,width:300,height:50,rx:16,fill:'#0E1829',stroke:'#3FA9F5','stroke-width':3},ch);
-  txt(ch,174,307,'CÁMARA DE AIRE',{fill:'#9BD6FA',fs:25,fw:900,ls:'.06em'});
-  // thermometer
-  const th=mk('g',{id:'g5th',opacity:0},g5);
-  mk('rect',{x:900,y:70,width:70,height:330,rx:35,fill:'#101E31',stroke:'#32465F','stroke-width':4},th);
-  const cpT=mk('clipPath',{id:'clT'},d); mk('rect',{x:912,y:82,width:46,height:306,rx:23},cpT);
-  const gi=mk('g',{'clip-path':'url(#clT)'},th);
-  mk('rect',{id:'g5merc',x:912,y:388,width:46,height:0,fill:'url(#tg)'},gi);
-  mk('circle',{cx:935,cy:378,r:36,fill:'#FF7A1A',opacity:.0,id:'g5bulb'},th);
-  const tt=txt(th,935,46,'+ CONFORT',{fill:'#FFC79B',fs:26,fw:900,ta:'middle',ls:'.08em'});tt.id='g5tt';
-})();
-function S5(t,p){
-  $('g5ti').setAttribute('opacity',E.out(sg(t,.5,.4)));
-  $('g5ch').setAttribute('opacity',E.out(sg(t,1.5,.45)));
-  for(let i=0;i<6;i++){
-    const a=$('g5a'+i), pr=sg(t,.7+i*.08,4.5);
-    const ph=((t*.78+i*.167))%1;
-    a.setAttribute('transform','translate('+lp(60,790,ph)+','+(336+(i%3)*14)+')');
-    a.setAttribute('opacity',pr>0?Math.sin(Math.PI*ph)*.8:0);
-  }
-  for(let i=0;i<3;i++){
-    const dd=$('g5d'+i), pr=sg(t,2.0+i*.12,3.5);
-    const ph=((t*.6+i*.25))%1;
-    dd.setAttribute('transform','translate(0,'+lp(0,-26,ph)+')');
-    dd.setAttribute('opacity',pr>0?Math.sin(Math.PI*ph)*.7:0);
-  }
-  const th=$('g5th'); th.setAttribute('opacity',E.out(sg(t,1.1,.5)));
-  const m=E.io(sg(t,1.5,2.0))*280;
-  const mm=$('g5merc'); mm.setAttribute('height',m); mm.setAttribute('y',388-m);
-  $('g5bulb').setAttribute('opacity',cl(sg(t,2.4,.8))*.95);
-  $('g5tt').setAttribute('opacity',E.out(sg(t,3.1,.4)));
-}
-
-/* ============================ SCENE 6 ============================ */
-const g6=$('s6svg');
-const ICONS=[
-  {t:'PUDRICIÓN',s:'No absorbe agua'},
-  {t:'TERMITAS',s:'No es alimento'},
-  {t:'CORROSIÓN',s:'No se oxida'},
-  {t:'MANTENCIÓN',s:'No pide pintura'}
-];
-(function(){
-  g6.innerHTML='';
-  const CX=[270,810,270,810], CY=[120,120,370,370];
-  ICONS.forEach((o,i)=>{
-    const g=mk('g',{id:'g6i'+i,opacity:0},g6);
-    const x=CX[i],y=CY[i];
-    mk('rect',{x:x-240,y:y-92,width:480,height:184,rx:34,fill:'#101D2E',stroke:'#24354B','stroke-width':3},g);
-    // glyph circle
-    mk('circle',{cx:x-152,cy:y,r:52,fill:'rgba(255,77,94,.1)',stroke:'rgba(255,77,94,.35)','stroke-width':3},g);
-    const gl=mk('g',{},g);
-    if(i===0){ // drop
-      mk('path',{d:'M'+(x-152)+' '+(y-26)+' c 22 26 30 36 30 50 a 30 30 0 0 1 -60 0 c 0 -14 8 -24 30 -50 z',fill:'#8FD3FB',opacity:.9},gl);
-    } else if(i===1){ // bug
-      mk('ellipse',{cx:x-152,cy:y+6,rx:17,ry:26,fill:'#C9A26B'},gl);
-      mk('circle',{cx:x-152,cy:y-26,r:12,fill:'#C9A26B'},gl);
-      [-1,1].forEach(s=>{[0,1,2].forEach(k=>{
-        mk('line',{x1:x-152+s*15,y1:y-6+k*15,x2:x-152+s*36,y2:y-16+k*17,stroke:'#C9A26B','stroke-width':5,'stroke-linecap':'round'},gl)})});
-      mk('line',{x1:x-158,y1:y-34,x2:x-170,y2:y-50,stroke:'#C9A26B','stroke-width':5,'stroke-linecap':'round'},gl);
-      mk('line',{x1:x-146,y1:y-34,x2:x-134,y2:y-50,stroke:'#C9A26B','stroke-width':5,'stroke-linecap':'round'},gl);
-    } else if(i===2){ // rust flakes
-      mk('rect',{x:x-186,y:y-12,width:68,height:24,rx:7,fill:'#9FAEBC',
-        transform:'rotate(-26 '+(x-152)+' '+y+')'},gl);
-      [[-20,-12],[0,6],[-28,8],[16,-14]].forEach(o=>
-        mk('circle',{cx:x-152+o[0],cy:y+o[1],r:6,fill:'#D2763B'},gl));
-    } else { // brush
-      mk('rect',{x:x-160,y:y-36,width:16,height:46,rx:4,fill:'#C9D3DE'},gl);
-      mk('rect',{x:x-168,y:y+8,width:32,height:26,rx:6,fill:'#9FAEBC'},gl);
-      mk('rect',{x:x-166,y:y+30,width:28,height:16,rx:5,fill:'#FFB27A'},gl);
-    }
-    // slash
-    mk('line',{id:'g6s'+i,x1:x-196,y1:y+44,x2:x-196,y2:y+44,stroke:'#FF4D5E','stroke-width':9,'stroke-linecap':'round'},g);
-    txt(g,x-70,y-4,o.t,{fill:'#FFFFFF',fs:36,fw:900,ls:'.03em'});
-    txt(g,x-70,y+38,o.s,{fill:'#90A4BC',fs:27,fw:600});
+/* ===================== 6 · EL TIEMPO ===================== */
+const T6=['PUDRICIÓN','TERMITAS','CORROSIÓN'];
+(function(){ const s=$('v6'); defs(s);
+  ground(s,'M0 430 L1080 430',540,'g6soil');
+  const g=mk('g',{id:'g6line'},s);
+  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  pile(s,200,60,500).setAttribute('id','g6pile');
+  $('g6pile').style.opacity=0;
+  s.appendChild(g);
+  T6.forEach((w,i)=>{
+    const gg=mk('g',{id:'g6i'+i},s);
+    const y=150+i*110;
+    lbl(gg,360,y,w,{c:C.niebla,fs:40});
+    mk('line',{id:'g6s'+i,x1:356,y1:y-13,x2:356,y2:y-13,
+      stroke:C.madera,'stroke-width':4,'stroke-linecap':'round'},gg);
   });
 })();
-function S6(t,p){
-  ICONS.forEach((o,i)=>{
-    const st=.45+i*.33, pr=E.out(sg(t,st,.5));
-    const g=$('g6i'+i);
-    g.setAttribute('opacity',pr);
-    const sc=lp(.9,1,E.elastic(sg(t,st,.9)));
-    const CX=[270,810,270,810], CY=[120,120,370,370];
-    g.setAttribute('transform','translate('+(CX[i]*(1-sc))+','+(CY[i]*(1-sc)+lp(26,0,pr))+') scale('+sc+')');
-    const sp=E.out(sg(t,st+.3,.4));
-    const s=$('g6s'+i), x=CX[i],y=CY[i];
-    s.setAttribute('x1',x-196); s.setAttribute('y1',y+44);
-    s.setAttribute('x2',lp(x-196,x-108,sp)); s.setAttribute('y2',lp(y+44,y-44,sp));
+function S6(t){
+  $('r6').style.width = EOUT(sg(t,.25,.70))*120+'px';
+  $('g6soil').style.opacity = EOUT(sg(t,.15,.60));
+  $('g6pile').style.opacity = EOUT(sg(t,.30,.80));
+  drawAll($('g6line'), sg(t,.20,1.00));
+  T6.forEach((w,i)=>{
+    const st=1.30+i*.55;
+    $('g6i'+i).style.opacity = EOUT(sg(t,st,.70));
+    const p=EOUT(sg(t,st+.35,.55)), n=$('g6s'+i), y=150+i*110;
+    n.setAttribute('x2', lp(356, 356+(w.length*25+20), p));
   });
 }
 
-/* ============================ SCENE 7 ============================ */
-const g7=$('s7svg');
-const BARS=[
-  {y:34, lab:'PILOTES',              w:430, col:'#27D9A3', val:'rápido, en seco y reversible'},
-  {y:194,lab:'EXCAVACIÓN + RADIER',  w:936, col:'#FF4D5E', val:'tierra, agua y escombros'}
-];
-(function(){
-  g7.innerHTML='';
-  BARS.forEach((r,i)=>{
-    const g=mk('g',{id:'g7r'+i,opacity:0},g7);
-    txt(g,72,r.y,r.lab,{fill:'#9FB3C9',fs:27,fw:900,ls:'.1em'});
-    mk('rect',{x:72,y:r.y+18,width:936,height:54,rx:17,fill:'#15202F'},g);
-    mk('rect',{id:'g7b'+i,x:72,y:r.y+18,width:0,height:54,rx:17,fill:r.col,opacity:.92},g);
-    const v=txt(g,72,r.y+116,r.val,{fill:i?'#FFB3BA':'#8FF0D2',fs:28,fw:700});v.id='g7v'+i;
-  });
+/* ===================== 7 · CIERRE ===================== */
+(function(){ const s=$('v7'); defs(s);
+  const g=mk('g',{id:'g7line'},s);
+  stroke(g,'M340 260 H740',{c:C.madera,w:3});
+  [420,540,660].forEach(x=>stroke(g,'M'+(x-15)+' 120 V260 M'+(x+15)+' 120 V260',{w:3}));
 })();
-function S7(t,p){
-  BARS.forEach((r,i)=>{
-    const st=.4+i*.35;
-    $('g7r'+i).setAttribute('opacity',E.out(sg(t,st,.4)));
-    $('g7b'+i).setAttribute('width',E.out5(sg(t,st+.18,i?1.3:.6))*r.w);
-    $('g7v'+i).setAttribute('opacity',E.out(sg(t,st+.7,.4)));
-  });
+function S7(t){
+  drawAll($('g7line'), sg(t,.15,1.10));
+  const p=EOUT(sg(t,.75,.80)), lk=$('lk');
+  lk.style.opacity=p; lk.style.transform='translateY('+lp(20,0,p)+'px)';
 }
 
-/* ============================ SCENE 8 ============================ */
-const g8=$('s8svg');
-(function(){
-  g8.innerHTML='';
-  for(let i=0;i<5;i++){
-    const x=250+i*145;
-    const g=mk('g',{id:'g8p'+i,opacity:0},g8);
-    mk('rect',{x:x-20,y:110,width:40,height:150,rx:10,fill:'#EDF2F7'},g);
-    mk('rect',{x:x-11,y:116,width:22,height:138,rx:6,fill:'#A6B4C2',opacity:.7},g);
-    mk('rect',{x:x-27,y:100,width:54,height:18,rx:8,fill:'#FF7A1A'},g);
-  }
-})();
-function S8(t,p){
-  for(let i=0;i<5;i++){
-    const pr=E.out(sg(t,.1+i*.09,.55)), g=$('g8p'+i);
-    g.setAttribute('opacity',pr);
-    g.setAttribute('transform','translate(0,'+lp(-180,0,pr)+')');
-  }
-  $('s8line').style.width=(E.out5(sg(t,1.0,.7))*520)+'px';
-}
-
-/* ============================ driver ============================ */
-const FN={s1:S1,s2:S2,s3:S3,s4:S4,s5:S5,s6:S6,s7:S7,s8:S8};
-function reveal(scene,t){
-  scene.querySelectorAll('.rv').forEach(n=>{
-    const d=parseFloat(n.dataset.d||0), a=E.out(cl((t-d)/.52));
+/* ===================== driver ===================== */
+const FN={s1:S1,s2:S2,s3:S3,s4:S4,s5:S5,s6:S6,s7:S7};
+function reveal(sc,t){
+  sc.querySelectorAll('.rv').forEach(n=>{
+    const d=parseFloat(n.dataset.d||0), a=EOUT(cl((t-d)/.70));   // 0,7 s (§7)
     n.style.opacity=a;
-    n.style.transform='translateY('+lp(30,0,a)+'px)';
+    n.style.transform='translateY('+lp(32,0,a)+'px)';            // 32 px (§7)
   });
 }
 window.renderFrame=function(T){
   T=Math.max(0,Math.min(TOTAL,T));
-  $('pbar').style.width=(100*T/TOTAL)+'%';
   SCENES.forEach(s=>{
     const t=T-s.start, n=el[s.id];
-    if(t<-0.05||t>s.dur){n.style.display='none';return}
+    if(t<-0.05||t>s.dur){ n.style.display='none'; return; }
     n.style.display='block';
-    const fin=E.io(cl(t/FADE)), fout=1-E.io(cl((t-(s.dur-FADE))/FADE));
-    const o=Math.min(fin,fout);
-    n.style.opacity=o;
-    n.style.transform='translateY('+lp(26,0,fin)+'px) scale('+lp(1.02,1,fin)+')';
-    reveal(n,t);
-    FN[s.id](t,cl(t/s.dur));
+    const fin=EIO(cl(t/FADE)), fout=1-EIO(cl((t-(s.dur-FADE))/FADE));
+    n.style.opacity=Math.min(fin,fout);
+    reveal(n,t); FN[s.id](t);
   });
-  // chrome fade in/out
-  const cO=E.out(cl(T/.6))*(1-E.out(cl((T-(TOTAL-.7))/.7)));
-  const ch=$('chrome'); ch.style.opacity=cO;
-  $('foot').style.opacity=(T>SCENES[7].start-.2)?0:1;
-  document.body.dataset.ready='1';
 };
 window.TOTAL=TOTAL;
 renderFrame(0);

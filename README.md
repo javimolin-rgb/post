@@ -1,7 +1,8 @@
 # post
 
-Material para redes sociales de Neorigen.
+Piezas audiovisuales de Neorigen.
 
-- `video/` — animación fuente y renderizador
-- `out/` — videos listos para publicar
+- `docs/MANUAL_MARCA_VIDEO.md` — manual de marca para video (obligatorio)
+- `video/` — fuente editable de la animación, tipografías y logos
+- `out/` — archivos listos para publicar
 - `CAPTION.md` — copy y hashtags
