@@ -17,6 +17,7 @@ const path = require('path');
     deviceScaleFactor: 1,
   });
   await page.goto(HTML, { waitUntil: 'load' });
+  if (args.includes('--nosubs')) await page.evaluate(() => { window.SUBS_ON = false; });
   await page.evaluate(() => document.fonts.ready);
   const TOTAL = await page.evaluate(() => window.TOTAL);
 

@@ -143,29 +143,43 @@ write_wav(HERE / 'sfx.wav', st)
 
 # ---------------------------------------------------------------- voz (maqueta)
 if '--voice' in sys.argv:
-    MODEL = HERE / 'voice' / 'es_MX-claude-high.onnx'
-    # (inicio, texto, fin de la escena) — el texto en pantalla hace de subtítulo
+    MODEL = HERE / 'voice' / 'es_MX-ald-medium.onnx'      # voz masculina, es-MX
+    # (inicio, locución, subtítulo, fin de la escena)
+    # El guion NO repite los textos en pantalla: los complementa.
     LINES = [
-        (0.80,  "La casa empieza bajo tierra.",                   4.60),
-        (5.05,  "Un tubo de PVC lleno de hormigón armado.",      11.40),
-        (8.20,  "No es madera: no se pudre.",                    11.40),
-        (11.85, "Se adapta a la pendiente.",                     18.20),
-        (14.10, "La carga baja al suelo firme, sin mover tierra.",18.20),
-        (18.70, "Cuando llueve, el agua pasa por debajo.",       25.00),
-        (21.85, "Sin pozas ni humedad que suba.",                25.00),
-        (25.50, "Queda una cámara de aire ventilada.",           31.80),
-        (28.75, "Piso más cálido y menos humedad.",              31.80),
-        (32.30, "No se pudre. No se oxida.",                     38.00),
-        (34.85, "Durabilidad sin mantención.",                   38.00),
-        (38.60, "Neorigen. Cotiza en neorigen punto ce ele.",    43.00),
+        (0.85,  "Lo que sostiene una casa casi nunca se ve.",
+                ["Lo que sostiene una casa", "casi nunca se ve."], 4.60),
+        (4.85,  "El tubo queda ahí, protegiendo el hormigón.",
+                ["El tubo queda ahí,", "protegiendo el hormigón."], 11.40),
+        (7.95,  "La madera, bajo tierra, no dura.",
+                ["La madera, bajo tierra,", "no dura."], 11.40),
+        (11.75, "Cada uno baja lo que necesita.",
+                ["Cada uno baja", "lo que necesita."], 18.20),
+        (14.75, "La casa queda a nivel sin mover tierra.",
+                ["La casa queda a nivel", "sin mover tierra."], 18.20),
+        (18.60, "En invierno se nota: el agua sigue de largo.",
+                ["En invierno se nota:", "el agua sigue de largo."], 25.00),
+        (22.20, "Nada se empoza contra la estructura.",
+                ["Nada se empoza", "contra la estructura."], 25.00),
+        (25.45, "Entre el suelo y el piso circula aire.",
+                ["Entre el suelo y el piso", "circula aire."], 31.80),
+        (28.55, "Eso es lo que mantiene la casa seca.",
+                ["Eso es lo que mantiene", "la casa seca."], 31.80),
+        (32.25, "A las termitas no les interesa el PVC.",
+                ["A las termitas", "no les interesa el PVC."], 38.00),
+        (35.70, "Se instala y se olvida.",
+                ["Se instala", "y se olvida."], 38.00),
+        (38.55, "Si estás por construir, hablemos primero del terreno.",
+                ["Si estás por construir,", "hablemos primero del terreno."], 43.00),
     ]
     voz = np.zeros(N)
     tmp = HERE / '_vo'; tmp.mkdir(exist_ok=True)
     spans = []
-    for i, (t0, text, tend) in enumerate(LINES):
+    for i, (t0, text, sub, tend) in enumerate(LINES):
         f = tmp / f'l{i:02d}.wav'
         subprocess.run([sys.executable, '-m', 'piper', '-m', str(MODEL),
-                        '-f', str(f), '--length-scale', '1.08'],
+                        '-f', str(f), '--length-scale', '0.95',
+                        '--noise-w-scale', '0.85'],
                        input=text.encode('utf-8'), check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         with wave.open(str(f), 'rb') as w:
@@ -180,16 +194,26 @@ if '--voice' in sys.argv:
         a[:f_in] *= np.linspace(0, 1, f_in); a[-f_in:] *= np.linspace(1, 0, f_in)
         at(voz, t0, a, 1.0)
         d = len(a) / SR
-        spans.append((t0, t0 + d, tend, text))
+        spans.append((t0, t0 + d, tend, text, sub))
         print(f'  {t0:6.2f} → {t0+d:6.2f}s   {text}')
     bad = False
     for j in range(len(spans)):
-        s0, s1, send, tx = spans[j]
+        s0, s1, send, tx = spans[j][:4]
         if s1 > send:
             print(f'  ! se pasa de la escena por {s1-send:.2f}s: {tx}'); bad = True
         if j + 1 < len(spans) and s1 > spans[j+1][0]:
             print(f'  ! se pisa con la siguiente por {s1-spans[j+1][0]:.2f}s: {tx}'); bad = True
     print('  locuciones: ' + ('REVISAR' if bad else 'sin choques ni desbordes'))
+    # escribe los subtítulos, con sus tiempos reales, dentro del HTML
+    rows = ',\n  '.join(
+        '{a:%.2f,b:%.2f,l:[%s]}' % (s0, s1, ','.join(repr(x) for x in sub))
+        for s0, s1, _send, _tx, sub in spans)
+    html = HERE / 'pilotes-reel.html'
+    src = html.read_text(encoding='utf-8')
+    k0 = src.index('/* SUBS:INICIO */'); k1 = src.index('/* SUBS:FIN */')
+    src = src[:k0] + '/* SUBS:INICIO */\nlet SUBS=[\n  ' + rows + '\n];\n' + src[k1:]
+    html.write_text(src, encoding='utf-8')
+    print('  subtitulos escritos en pilotes-reel.html')
     p = np.max(np.abs(voz))
     if p > 0: voz = voz / p * 0.85
     write_wav(HERE / 'voz.wav', np.stack([voz, voz], axis=1))

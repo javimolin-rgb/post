@@ -101,18 +101,24 @@ entra en la escena 02 y crece en la 03, el agua que escurre, el golpe de cada
 pilote al colocarse, el vaciado del hormigón, los tres descartes de la escena
 05 y un soplo suave en cada transición de cámara.
 
-La voz es una **maqueta** (TTS). Necesita el modelo, que no está en el repo:
+La voz es una **maqueta** (TTS, masculina es-MX). Necesita el modelo, que no
+está en el repo por peso:
 
 ```bash
 mkdir -p voice && cd voice
-B=https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high
-curl -sSfLO $B/es_MX-claude-high.onnx
-curl -sSfLO $B/es_MX-claude-high.onnx.json
+B=https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/ald/medium
+curl -sSfLO $B/es_MX-ald-medium.onnx
+curl -sSfLO $B/es_MX-ald-medium.onnx.json
 pip install piper-tts
 ```
 
-El script verifica que ninguna locución se pise con la siguiente ni se salga
-de su escena, y lo informa al generar.
+`audio.py --voice` hace tres cosas además de sintetizar: verifica que ninguna
+locución se pise con la siguiente ni se salga de su escena, y **escribe los
+subtítulos con sus tiempos reales dentro de `pilotes-reel.html`** (bloque
+`SUBS:INICIO` / `SUBS:FIN`). Por eso el orden es: `audio.py --voice` primero,
+`render.js` después. Si se cambia una locución, hay que volver a renderizar.
+
+`node render.js --nosubs` genera los fotogramas sin la capa de subtítulos.
 
 ## Cámara
 

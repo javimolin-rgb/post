@@ -44,23 +44,25 @@ resuelve la fundación en ese caso.
 
 ## Guion de voz en off
 
-Los textos en pantalla dicen lo mismo que la voz, así que la tipografía hace
-de subtítulo quemado (§9). Si se graba con otra voz, respetar estos tiempos.
+El guion **no repite** los textos en pantalla: los complementa. La tipografía
+dice qué es; la voz dice por qué importa. Por eso el video lleva subtítulos
+quemados propios (§9), en Work Sans 500 a 48 px sobre un degradado de Azul
+Origen. Si se graba con otra voz, respetar estos tiempos.
 
-| Entra | Texto |
-|---|---|
-| 0:00.8 | La casa empieza bajo tierra. |
-| 0:05.1 | Un tubo de PVC lleno de hormigón armado. |
-| 0:08.2 | No es madera: no se pudre. |
-| 0:11.9 | Se adapta a la pendiente. |
-| 0:14.1 | La carga baja al suelo firme, sin mover tierra. |
-| 0:18.7 | Cuando llueve, el agua pasa por debajo. |
-| 0:21.9 | Sin pozas ni humedad que suba. |
-| 0:25.5 | Queda una cámara de aire ventilada. |
-| 0:28.8 | Piso más cálido y menos humedad. |
-| 0:32.3 | No se pudre. No se oxida. |
-| 0:34.9 | Durabilidad sin mantención. |
-| 0:38.6 | Neorigen. Cotiza en neorigen punto ce ele. |
+| Entra | Voz en off | En pantalla al mismo tiempo |
+|---|---|---|
+| 0:00.9 | Lo que sostiene una casa casi nunca se ve. | La casa empieza bajo tierra. |
+| 0:04.9 | El tubo queda ahí, protegiendo el hormigón. | Un tubo de PVC lleno de hormigón. |
+| 0:08.0 | La madera, bajo tierra, no dura. | No es madera: no se pudre. |
+| 0:11.8 | Cada uno baja lo que necesita. | Se adapta a la pendiente. |
+| 0:14.8 | La casa queda a nivel sin mover tierra. | La carga baja al suelo firme. |
+| 0:18.6 | En invierno se nota: el agua sigue de largo. | El agua pasa por debajo. |
+| 0:22.2 | Nada se empoza contra la estructura. | Sin pozas ni humedad que suba. |
+| 0:25.5 | Entre el suelo y el piso circula aire. | Una cámara de aire ventilada. |
+| 0:28.6 | Eso es lo que mantiene la casa seca. | Piso más cálido. Menos humedad. |
+| 0:32.3 | A las termitas no les interesa el PVC. | No se pudre. No se oxida. |
+| 0:35.7 | Se instala y se olvida. | Durabilidad sin mantención. |
+| 0:38.6 | Si estás por construir, hablemos primero del terreno. | Cotiza en neorigen.cl |
 
 ## Notas de publicación
 
@@ -71,9 +73,13 @@ de subtítulo quemado (§9). Si se graba con otra voz, respetar estos tiempos.
 - **Sin música.** No había pista acústica con derechos claros disponible, así
   que se entrega sin música y se avisa (§9). Para agregarla: instrumental
   tranquila, acústica o piano, nunca EDM ni trap.
-- **La voz es una maqueta.** `...-MAQUETA-VOZ.mp4` usa una voz sintética sólo
-  para evaluar guion y tiempos. **No publicar así**: el manual pide voz
-  pausada y cercana. Grabar sobre esos mismos tiempos y volver a mezclar.
+- **La voz es una maqueta.** `...-MAQUETA-VOZ.mp4` usa una voz sintética
+  masculina (es-MX) sólo para evaluar guion y tiempos. **No publicar así**:
+  el manual pide voz pausada y cercana, y una voz sintética no lo es. Grabar
+  sobre esos mismos tiempos y volver a mezclar.
+- **El archivo sin voz ya trae los subtítulos**, así que queda listo para
+  montarle la locución grabada sin tocar la imagen. Si se decide no usar voz,
+  se regenera sin subtítulos con `node render.js --nosubs`.
 - **Niveles:** la versión con voz queda en −14 LUFS y −1,4 dBTP, como pide §9.
   La versión sin voz queda en −21,9 LUFS a propósito: es ambiente, y a −14
   la lluvia quedaría al frente de la pieza.
