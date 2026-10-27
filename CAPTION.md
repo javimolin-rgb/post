@@ -44,25 +44,35 @@ resuelve la fundación en ese caso.
 
 ## Guion de voz en off
 
-El guion **no repite** los textos en pantalla: los complementa. La tipografía
-dice qué es; la voz dice por qué importa. Por eso el video lleva subtítulos
-quemados propios (§9), en Work Sans 500 a 48 px sobre un degradado de Azul
-Origen. Si se graba con otra voz, respetar estos tiempos.
+Voz: **es-CL-CatalinaNeural** (mujer, español de Chile), a +12 % de velocidad.
 
-| Entra | Voz en off | En pantalla al mismo tiempo |
-|---|---|---|
-| 0:00.9 | Lo que sostiene una casa casi nunca se ve. | La casa empieza bajo tierra. |
-| 0:04.9 | El tubo queda ahí, protegiendo el hormigón. | Un tubo de PVC lleno de hormigón. |
-| 0:08.0 | La madera, bajo tierra, no dura. | No es madera: no se pudre. |
-| 0:11.8 | Cada uno baja lo que necesita. | Se adapta a la pendiente. |
-| 0:14.8 | La casa queda a nivel sin mover tierra. | La carga baja al suelo firme. |
-| 0:18.6 | En invierno se nota: el agua sigue de largo. | El agua pasa por debajo. |
-| 0:22.2 | Nada se empoza contra la estructura. | Sin pozas ni humedad que suba. |
-| 0:25.5 | Entre el suelo y el piso circula aire. | Una cámara de aire ventilada. |
-| 0:28.6 | Eso es lo que mantiene la casa seca. | Piso más cálido. Menos humedad. |
-| 0:32.3 | A las termitas no les interesa el PVC. | No se pudre. No se oxida. |
-| 0:35.7 | Se instala y se olvida. | Durabilidad sin mantención. |
-| 0:38.6 | Si estás por construir, hablemos primero del terreno. | Cotiza en neorigen.cl |
+El guion **no repite** los textos en pantalla: los complementa y usa preguntas
+para enganchar. La tipografía dice qué es; la voz dice por qué importa. Por eso
+el video lleva subtítulos quemados propios (§9).
+
+| Entra | Voz en off |
+|---|---|
+| 0:00.6 | ¿Sabes sobre qué se apoya tu casa? |
+| 0:03.3 | Casi nunca se ve. |
+| 0:05.1 | El tubo queda protegiendo el hormigón. |
+| 0:08.0 | ¿Por qué no madera? Bajo tierra no dura. |
+| 0:11.6 | ¿Y si el terreno está en pendiente? |
+| 0:13.7 | Cada pilote baja lo que necesita. |
+| 0:15.7 | La casa queda a nivel, sin mover tierra. |
+| 0:18.4 | ¿Y cuando llueve fuerte? |
+| 0:20.2 | El agua sigue de largo, sin empozarse. |
+| 0:23.0 | Tampoco sube humedad del suelo. |
+| 0:25.2 | Entre el suelo y el piso circula aire. |
+| 0:27.8 | Eso mantiene la casa seca. |
+| 0:29.7 | Por eso el piso no se siente frío. |
+| 0:32.2 | ¿Termitas? No les interesa el PVC. |
+| 0:36.4 | Se instala y listo. |
+| 0:38.7 | ¿Vas a construir? Hablemos primero del terreno. |
+
+Las pausas no son relleno: **0,40–1,15 s dentro de cada escena** (el respiro
+después de una pregunta) y **0,47–1,24 s en los cortes**, donde cae la
+transición de cámara. Los tiempos los calcula `audio.py` con la duración real
+de cada locución, y avisa si se abre un hueco o algo se pisa.
 
 ## Notas de publicación
 
@@ -81,10 +91,15 @@ Origen. Si se graba con otra voz, respetar estos tiempos.
   obliga a acreditar al autor en el caption. El balance se ajusta sin
   rehacer nada cambiando `MUS_LEVEL` en `audio.py`, o montando la pista
   nueva sobre `video/musica.wav`.
-- **La voz es una maqueta.** `...-MAQUETA-VOZ.mp4` usa una voz sintética
-  masculina (es-MX) sólo para evaluar guion y tiempos. **No publicar así**:
-  el manual pide voz pausada y cercana, y una voz sintética no lo es. Grabar
-  sobre esos mismos tiempos y volver a mezclar.
+- **La voz es una maqueta.** `...-MAQUETA-VOZ.mp4` usa la voz chilena de
+  Microsoft generada con `edge-tts`, que va contra el servicio de lectura en
+  voz alta de Edge y **no está licenciado para publicar**. Sirve para aprobar
+  guion, ritmo y tiempos. Para publicar hay que regenerarla con una clave
+  propia de **Azure Speech** (capa gratuita):
+  `python3 voz-azure.py` — usa la misma voz y el mismo guion, y deja todo en
+  su lugar. Después: `audio.py --voice`, `render.js` y volver a encodear.
+- **"PVC" se escribe `pe ve ce`** en el texto hablado para que la V se lea
+  "ve" y no "uve". En pantalla el subtítulo sigue diciendo PVC.
 - **El archivo sin voz ya trae los subtítulos**, así que queda listo para
   montarle la locución grabada sin tocar la imagen. Si se decide no usar voz,
   se regenera sin subtítulos con `node render.js --nosubs`.

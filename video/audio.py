@@ -9,7 +9,7 @@ derechos, como pide §9 del manual de marca.
   python3 audio.py            -> out/sfx.wav     (ambiente y efectos)
   python3 audio.py --voice    -> ademas voz.wav y mezcla-voz.wav (maqueta)
 """
-import sys, wave, subprocess, pathlib
+import os, sys, wave, subprocess, pathlib
 import numpy as np
 
 SR   = 48000
@@ -203,79 +203,157 @@ write_wav(HERE / 'sfx.wav', st)
 write_wav(HERE / 'musica.wav', np.stack([mus, mus], axis=1))   # para ajustar el balance aparte
 
 # ---------------------------------------------------------------- voz (maqueta)
+# ---------------------------------------------------------------- voz
+# Guion locutado. No repite los textos en pantalla: los complementa, y usa
+# preguntas para enganchar. "pe ve ce" va escrito fonético para que la V se
+# lea "ve" y no "uve"; el subtítulo sigue diciendo PVC.
+#
+# Cada escena define su retardo de entrada y la pausa después de cada línea,
+# y los tiempos se calculan con la duración real de cada locución. Así las
+# pausas quedan donde se quieren (después de una pregunta) y no aparecen
+# huecos por descuadre.
+VOZ = 'es-CL-CatalinaNeural'      # mujer, español de Chile
+RATE = '+12%'
+
+VO_SCENES = [
+ # (inicio, fin, retardo, [(hablado, subtítulo, pausa después), ...])
+ (0.0, 4.6, 0.55, [
+   ("¿Sabes sobre qué se apoya tu casa?",
+    ["¿Sabes sobre qué", "se apoya tu casa?"], 0.45),
+   ("Casi nunca se ve.",
+    ["Casi nunca se ve."], 0.0)]),
+ (4.2, 11.4, 0.60, [
+   ("El tubo queda protegiendo el hormigón.",
+    ["El tubo queda", "protegiendo el hormigón."], 0.50),
+   ("¿Por qué no madera? Bajo tierra no dura.",
+    ["¿Por qué no madera?", "Bajo tierra no dura."], 0.0)]),
+ (11.0, 18.2, 0.60, [
+   ("¿Y si el terreno está en pendiente?",
+    ["¿Y si el terreno", "está en pendiente?"], 0.45),
+   ("Cada pilote baja lo que necesita.",
+    ["Cada pilote baja", "lo que necesita."], 0.40),
+   ("La casa queda a nivel, sin mover tierra.",
+    ["La casa queda a nivel,", "sin mover tierra."], 0.0)]),
+ (17.8, 25.0, 0.60, [
+   ("¿Y cuando llueve fuerte?",
+    ["¿Y cuando llueve fuerte?"], 0.45),
+   ("El agua sigue de largo, sin empozarse.",
+    ["El agua sigue de largo,", "sin empozarse."], 0.45),
+   ("Tampoco sube humedad del suelo.",
+    ["Tampoco sube humedad", "del suelo."], 0.0)]),
+ (24.6, 31.8, 0.60, [
+   ("Entre el suelo y el piso circula aire.",
+    ["Entre el suelo y el piso", "circula aire."], 0.50),
+   ("Eso mantiene la casa seca.",
+    ["Eso mantiene la casa seca."], 0.45),
+   ("Por eso el piso no se siente frío.",
+    ["Por eso el piso", "no se siente frío."], 0.0)]),
+ (31.4, 38.0, 0.60, [
+   ("¿Termitas? No les interesa el pe ve ce.",
+    ["¿Termitas?", "No les interesa el PVC."], 0.45),
+   ("Se instala y listo.",
+    ["Se instala y listo."], 0.0)]),
+ (37.6, 43.0, 0.60, [
+   ("¿Vas a construir? Hablemos primero del terreno.",
+    ["¿Vas a construir?", "Hablemos primero del terreno."], 0.0)]),
+]
+
 if '--voice' in sys.argv:
-    MODEL = HERE / 'voice' / 'es_MX-ald-medium.onnx'      # voz masculina, es-MX
-    # (inicio, locución, subtítulo, fin de la escena)
-    # El guion NO repite los textos en pantalla: los complementa.
-    LINES = [
-        (0.85,  "Lo que sostiene una casa casi nunca se ve.",
-                ["Lo que sostiene una casa", "casi nunca se ve."], 4.60),
-        (4.85,  "El tubo queda ahí, protegiendo el hormigón.",
-                ["El tubo queda ahí,", "protegiendo el hormigón."], 11.40),
-        (7.95,  "La madera, bajo tierra, no dura.",
-                ["La madera, bajo tierra,", "no dura."], 11.40),
-        (11.75, "Cada uno baja lo que necesita.",
-                ["Cada uno baja", "lo que necesita."], 18.20),
-        (14.75, "La casa queda a nivel sin mover tierra.",
-                ["La casa queda a nivel", "sin mover tierra."], 18.20),
-        (18.60, "En invierno se nota: el agua sigue de largo.",
-                ["En invierno se nota:", "el agua sigue de largo."], 25.00),
-        (22.20, "Nada se empoza contra la estructura.",
-                ["Nada se empoza", "contra la estructura."], 25.00),
-        (25.45, "Entre el suelo y el piso circula aire.",
-                ["Entre el suelo y el piso", "circula aire."], 31.80),
-        (28.55, "Eso es lo que mantiene la casa seca.",
-                ["Eso es lo que mantiene", "la casa seca."], 31.80),
-        # se escribe fonético para el TTS; el subtítulo mantiene "PVC"
-        (32.25, "A las termitas no les interesa el pe ve ce.",
-                ["A las termitas", "no les interesa el PVC."], 38.00),
-        (35.70, "Se instala y se olvida.",
-                ["Se instala", "y se olvida."], 38.00),
-        (38.55, "Si estás por construir, hablemos primero del terreno.",
-                ["Si estás por construir,", "hablemos primero del terreno."], 43.00),
-    ]
-    voz = np.zeros(N)
+    import asyncio, edge_tts
+    PROXY = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
     tmp = HERE / '_vo'; tmp.mkdir(exist_ok=True)
-    spans = []
-    for i, (t0, text, sub, tend) in enumerate(LINES):
-        f = tmp / f'l{i:02d}.wav'
-        subprocess.run([sys.executable, '-m', 'piper', '-m', str(MODEL),
-                        '-f', str(f), '--length-scale', '0.88',
-                        '--noise-w-scale', '0.85'],
-                       input=text.encode('utf-8'), check=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        with wave.open(str(f), 'rb') as w:
-            sr0 = w.getframerate()
-            a = np.frombuffer(w.readframes(w.getnframes()), dtype='<i2').astype(np.float64) / 32768
-            if w.getnchannels() == 2: a = a.reshape(-1, 2).mean(axis=1)
-        if sr0 != SR:                                    # remuestreo lineal a 48 k
-            a = np.interp(np.arange(int(len(a) * SR / sr0)) * sr0 / SR,
-                          np.arange(len(a)), a)
-        a = band(a, 90, 12000)                           # limpia graves de sala
-        f_in = int(0.015 * SR)
-        a[:f_in] *= np.linspace(0, 1, f_in); a[-f_in:] *= np.linspace(1, 0, f_in)
-        at(voz, t0, a, 1.0)
-        d = len(a) / SR
-        spans.append((t0, t0 + d, tend, text, sub))
-        print(f'  {t0:6.2f} → {t0+d:6.2f}s   {text}')
+
+    async def una(text, f):
+        # el servicio falla de vez en cuando: se reintenta con espera creciente
+        for intento in range(5):
+            try:
+                await edge_tts.Communicate(text, VOZ, rate=RATE, proxy=PROXY).save(str(f))
+                if f.exists() and f.stat().st_size > 1000:
+                    return
+            except Exception as e:
+                if intento == 4: raise
+            await asyncio.sleep(1.5 * (intento + 1))
+        raise RuntimeError(f'sin audio para: {text}')
+
+    async def grab():
+        out = []
+        for si, (s0, s1, lead, lines) in enumerate(VO_SCENES):
+            for li, (text, sub, gap) in enumerate(lines):
+                import hashlib
+                h = hashlib.sha1(f'{VOZ}|{RATE}|{text}'.encode()).hexdigest()[:12]
+                f = tmp / f'{h}.mp3'
+                if not (f.exists() and f.stat().st_size > 1000):
+                    await una(text, f)
+                    await asyncio.sleep(0.4)
+                out.append((si, li, f, text, sub, gap, s0, s1, lead))
+        return out
+    takes = asyncio.run(grab())
+
+    def load(mp3):
+        wv = mp3.with_suffix('.conv.wav')
+        subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(mp3),
+                        '-ar',str(SR),'-ac','1',str(wv)], check=True)
+        with wave.open(str(wv)) as w:
+            a = np.frombuffer(w.readframes(w.getnframes()), dtype='<i2').astype(np.float64)/32768
+        wv.unlink()
+        a = band(a, 85, 13000)
+        # edge-tts entrega silencio de relleno en los bordes: se recorta, si no
+        # aparecen huecos que no están en el guion
+        e = np.convolve(np.abs(a), np.ones(int(.02*SR))/int(.02*SR), mode='same')
+        viva = np.where(e > 10 ** (-46/20))[0]
+        if len(viva):
+            i0 = max(0, viva[0] - int(.05*SR)); i1 = min(len(a), viva[-1] + int(.07*SR))
+            a = a[i0:i1]
+        f = int(0.012*SR); a[:f] *= np.linspace(0,1,f); a[-f:] *= np.linspace(1,0,f)
+        return a
+
+    # Se reparte el tiempo que sobra en la escena entre sus pausas, en vez de
+    # dejarlo todo al final. Así las pausas quedan donde dicen algo (después
+    # de una pregunta) y no se abre un hueco antes del corte.
+    TAIL = 0.35
+    por_escena = {}
+    for tk in takes: por_escena.setdefault(tk[0], []).append(tk)
+
+    voz = np.zeros(N); spans = []
+    for si in sorted(por_escena):
+        grupo = por_escena[si]
+        audios = [load(f) for _si, _li, f, *_ in grupo]
+        _, _, _, _, _, _, s0, s1, lead = grupo[0]
+        base = [g for *_r, g, _a, _b, _c in
+                [(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8]) for x in grupo]]
+        base = [x[5] for x in grupo]
+        dur = [len(a)/SR for a in audios]
+        avail = (s1 - TAIL) - (s0 + lead)
+        sobra = avail - sum(dur) - sum(base[:-1])
+        n = len(grupo)
+        extra = min(max(sobra, 0) / (n - 1), 0.65) if n > 1 else 0.0
+        resto = max(sobra, 0) - extra * (n - 1)
+        t = s0 + lead + min(resto * 0.5, 0.5)
+        for k, (tk, a) in enumerate(zip(grupo, audios)):
+            at(voz, t, a, 1.0)
+            spans.append((t, t + dur[k], s1, tk[3], tk[4]))
+            print(f'  {t:6.2f} → {t+dur[k]:6.2f}s   {tk[3]}')
+            t += dur[k] + (base[k] + extra if k < n - 1 else 0.0)
+
     bad = False
-    for j in range(len(spans)):
-        s0, s1, send, tx = spans[j][:4]
-        if s1 > send:
-            print(f'  ! se pasa de la escena por {s1-send:.2f}s: {tx}'); bad = True
-        if j + 1 < len(spans) and s1 > spans[j+1][0]:
-            print(f'  ! se pisa con la siguiente por {s1-spans[j+1][0]:.2f}s: {tx}'); bad = True
-    print('  locuciones: ' + ('REVISAR' if bad else 'sin choques ni desbordes'))
-    # escribe los subtítulos, con sus tiempos reales, dentro del HTML
-    rows = ',\n  '.join(
-        '{a:%.2f,b:%.2f,l:[%s]}' % (s0, s1, ','.join(repr(x) for x in sub))
-        for s0, s1, _send, _tx, sub in spans)
-    html = HERE / 'pilotes-reel.html'
-    src = html.read_text(encoding='utf-8')
-    k0 = src.index('/* SUBS:INICIO */'); k1 = src.index('/* SUBS:FIN */')
-    src = src[:k0] + '/* SUBS:INICIO */\nlet SUBS=[\n  ' + rows + '\n];\n' + src[k1:]
-    html.write_text(src, encoding='utf-8')
-    print('  subtitulos escritos en pilotes-reel.html')
+    for j, (a0, a1, send, tx, _s) in enumerate(spans):
+        if a1 > send - 0.10:
+            print(f'  ! se pasa de la escena por {a1-(send-0.10):.2f}s: {tx}'); bad = True
+        if j+1 < len(spans):
+            hueco = spans[j+1][0] - a1
+            misma = spans[j+1][1] <= send + 0.01     # ¿siguen en la misma escena?
+            if hueco < 0:
+                print(f'  ! se pisa con la siguiente: {tx}'); bad = True
+            elif misma and hueco > 1.25:
+                print(f'  ! silencio largo ({hueco:.2f}s) dentro de escena tras: {tx}'); bad = True
+    dentro = [spans[j+1][0]-spans[j][1] for j in range(len(spans)-1)
+              if spans[j+1][1] <= spans[j][2] + 0.01]
+    corte  = [spans[j+1][0]-spans[j][1] for j in range(len(spans)-1)
+              if spans[j+1][1] > spans[j][2] + 0.01]
+    print(f'  pausas dentro de escena: {min(dentro):.2f}–{max(dentro):.2f}s')
+    print(f'  pausas en los cortes:    {min(corte):.2f}–{max(corte):.2f}s')
+    print('  locuciones: ' + ('REVISAR' if bad else 'sin choques, desbordes ni silencios largos'))
+
     p = np.max(np.abs(voz))
     if p > 0: voz = voz / p * 0.85
     write_wav(HERE / 'voz.wav', np.stack([voz, voz], axis=1))
@@ -285,3 +363,13 @@ if '--voice' in sys.argv:
     p = np.max(np.abs(m2))
     if p > 0: m2 = m2 / p * 0.9
     write_wav(HERE / 'mezcla-voz.wav', m2)
+
+    rows = ',\n  '.join(
+        '{a:%.2f,b:%.2f,l:[%s]}' % (a0, a1, ','.join(repr(x) for x in sub))
+        for a0, a1, _s, _t, sub in spans)
+    html = HERE / 'pilotes-reel.html'
+    src = html.read_text(encoding='utf-8')
+    k0 = src.index('/* SUBS:INICIO */'); k1 = src.index('/* SUBS:FIN */')
+    html.write_text(src[:k0] + '/* SUBS:INICIO */\nlet SUBS=[\n  ' + rows + '\n];\n' + src[k1:],
+                    encoding='utf-8')
+    print('  subtitulos escritos en pilotes-reel.html')
