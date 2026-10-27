@@ -98,6 +98,8 @@ de cada locución, y avisa si se abre un hueco o algo se pisa.
   propia de **Azure Speech** (capa gratuita):
   `python3 voz-azure.py` — usa la misma voz y el mismo guion, y deja todo en
   su lugar. Después: `audio.py --voice`, `render.js` y volver a encodear.
+- **Subtítulos con placa propia**, en Azul Origen (el negro de la marca según
+  §2), para que se lean como subtítulos y no como texto superpuesto.
 - **"PVC" se escribe `pe ve ce`** en el texto hablado para que la V se lea
   "ve" y no "uve". En pantalla el subtítulo sigue diciendo PVC.
 - **El archivo sin voz ya trae los subtítulos**, así que queda listo para

@@ -21,10 +21,14 @@ body{-webkit-font-smoothing:antialiased;color:var(--niebla)}
 .scene{position:absolute;left:0;top:0;width:1080px;height:1920px;display:none;opacity:0}
 #subscrim{position:absolute;left:0;top:1180px;width:1080px;height:740px;z-index:78;
   pointer-events:none;background:linear-gradient(180deg,
-    rgba(1,30,47,0) 0%, rgba(1,30,47,.55) 16%, rgba(1,30,47,.84) 30%, rgba(1,30,47,.84) 100%)}
-#subs{position:absolute;left:80px;top:1352px;width:870px;z-index:86;opacity:0;
-  font-family:'Work Sans N';font-weight:500;font-size:48px;line-height:1.3;
-  color:var(--niebla);text-align:center;pointer-events:none}
+    rgba(1,30,47,0) 0%, rgba(1,30,47,.26) 22%, rgba(1,30,47,.42) 40%, rgba(1,30,47,.42) 100%)}
+#subs{position:absolute;left:40px;top:1344px;width:1000px;z-index:86;opacity:0;
+  text-align:center;pointer-events:none}
+#subs .ln{display:inline-block;background:rgba(1,30,47,.93);
+  border:2px solid rgba(241,244,243,.10);border-radius:14px;
+  padding:8px 28px 12px;margin:5px 0;
+  font-family:'Work Sans N';font-weight:500;font-size:48px;line-height:1.26;
+  color:var(--niebla)}
 #vig{position:absolute;inset:0;z-index:80;pointer-events:none;
   background:radial-gradient(118% 76% at 50% 40%, rgba(1,30,47,0) 44%, rgba(1,30,47,.42) 100%)}
 
@@ -201,7 +205,7 @@ function drawSubs(T){
   if(!cur){ box.style.opacity=0; return; }
   if(box.dataset.k!==String(cur.a)){
     box.dataset.k=String(cur.a);
-    box.innerHTML=cur.l.map(x=>'<div>'+x+'</div>').join('');
+    box.innerHTML=cur.l.map(x=>'<div><span class="ln">'+x+'</span></div>').join('');
   }
   const fin=EOUT(cl((T-(cur.a-.14))/.30)), fout=1-EOUT(cl((T-cur.b)/.30));
   box.style.opacity=Math.min(fin,fout);
@@ -212,18 +216,27 @@ function drawSubs(T){
    movimiento continuo y no como un cambio de plano. El texto no se mueve:
    la cámara sólo afecta a la ilustración. */
 const CAM={
-  s1:{svg:'v1',ox:452,oy:400,sIn:1.05,sDrift:1.02,sOut:1.95}, // se acerca a un pilote
-  s2:{svg:'v2',ox:300,oy:290,sIn:1.26,sDrift:1.03,sOut:0.74}, // y se aleja al terreno
-  s3:{svg:'v3',ox:540,oy:300,sIn:0.88,sDrift:1.02,sOut:1.14},
-  s4:{svg:'v4',ox:510,oy:330,sIn:1.16,sDrift:1.02,sOut:1.62}, // entra bajo el piso
-  s5:{svg:'v5',ox:230,oy:330,sIn:1.30,sDrift:1.02,sOut:1.68}, // y de ahí a un pilote
-  s6:{svg:'v6',ox:200,oy:280,sIn:1.28,sDrift:1.02,sOut:0.88},
+  // Un corte se lee continuo si la escena que sale y la que entra se mueven
+  // en la MISMA dirección. Si la saliente empuja hacia adentro, la entrante
+  // tiene que entrar abierta y seguir cerrando (sIn<1); si la saliente se
+  // aleja, la entrante entra cerrada y sigue abriendo (sIn>1).
+  s1:{svg:'v1',ox:470,oy:420,sIn:1.05,sDrift:1.02,sOut:1.85}, // entra al pilote
+  s2:{svg:'v2',ox:300,oy:300,sIn:0.82,sDrift:1.03,sOut:0.70}, // y se abre al terreno
+  s3:{svg:'v3',ox:540,oy:300,sIn:1.18,sDrift:1.01,sOut:0.86}, // sigue abriendo a la casa
+  s4:{svg:'v4',ox:520,oy:330,sIn:1.12,sDrift:1.02,sOut:1.70}, // entra bajo el piso
+  s5:{svg:'v5',ox:230,oy:330,sIn:0.84,sDrift:1.02,sOut:1.75}, // y de ahí al pilote
+  s6:{svg:'v6',ox:200,oy:270,sIn:0.80,sDrift:1.02,sOut:0.72}, // se abre al cierre
   s7:null
 };
+/* La salida acelera y la entrada frena: así el movimiento no se detiene en el
+   corte. Las dos curvas son las del manual (§7); la de salida se usa sólo en
+   su primera mitad, que es la parte que acelera. */
+const EEXIT = p => EIO(cl(p) * .5) * 2;
 function camScale(t,dur,c){
-  const e1=EOUT(cl(t/.55)), e2=EIO(cl((t-(dur-.55))/.55));
+  const RAMP=0.80;
+  const e1=EOUT(cl(t/RAMP)), e2=EEXIT(cl((t-(dur-RAMP))/RAMP));
   const base=lp(c.sIn,1,e1);
-  const mid=lp(base,c.sDrift,cl((t-.55)/Math.max(.1,dur-1.1)));
+  const mid=lp(base,c.sDrift,cl((t-RAMP)/Math.max(.1,dur-2*RAMP)));
   return lp(mid,c.sOut,e2);
 }
 
@@ -338,32 +351,43 @@ function pile(p,x,yTop,yBot,w,o){
   }
   return g;
 }
-/* casa de madera: volumen + entablado */
+/* Casa de madera Neorigen: volumen de un agua, alero generoso, ventanal y
+   terraza sobre pilotes. El entablado sigue la pendiente del techo. */
 function house(p,o){
   const g=mk('g',{},p);
-  const L=o.x, R=o.x+o.w, T=o.y, B=o.y+o.h;           // cuerpo
-  mk('path',{d:'M'+(L-14)+' '+T+' L'+R+' '+(T-o.rise)+' L'+R+' '+T+' Z',fill:'url(#roof)'},g);
-  mk('rect',{x:L,y:T,width:o.w,height:o.h,fill:'url(#wall)'},g);
-  /* entablado horizontal */
-  for(let y=T+16;y<B-6;y+=17)
-    mk('line',{x1:L+3,y1:y,x2:R-3,y2:y,stroke:C.madera,'stroke-width':1.6,opacity:.26},g);
-  /* ventanas y puerta en Madera */
-  (o.win||[]).forEach(v=>{
-    mk('rect',{x:v[0],y:v[1],width:v[2],height:v[3],fill:C.madera,opacity:.82},g);
-    mk('rect',{x:v[0],y:v[1],width:v[2],height:v[3],fill:'none',stroke:C.niebla,'stroke-width':2.5},g);
-    mk('line',{x1:v[0]+v[2]/2,y1:v[1],x2:v[0]+v[2]/2,y2:v[1]+v[3],
-      stroke:C.niebla,'stroke-width':2,opacity:.75},g);
+  const L=o.x, R=o.x+o.w, T=o.y, B=o.y+o.h, W=o.w, RI=o.rise;
+  const borde = x => T - RI*(x-L)/W;               // canto superior del volumen
+  const OVER=30, TH=14, DECK=o.deck||0;
+  const cuerpo = 'M'+L+' '+T+' L'+R+' '+(T-RI)+' L'+R+' '+B+' L'+L+' '+B+' Z';
+  mk('path',{d:cuerpo,fill:'url(#wall)'},g);
+  for(let x=L+14;x<R-8;x+=16)                       // entablado vertical
+    mk('line',{x1:x,y1:borde(x)+9,x2:x,y2:B-4,stroke:C.madera,'stroke-width':1.6,opacity:.22},g);
+  (o.win||[]).forEach(v=>{                          // ventanal y vanos
+    mk('rect',{x:v[0],y:v[1],width:v[2],height:v[3],fill:C.madera,opacity:.80},g);
+    mk('rect',{x:v[0],y:v[1],width:v[2],height:v[3],fill:'none',stroke:C.niebla,'stroke-width':3},g);
+    if(v[2]>70) mk('line',{x1:v[0]+v[2]/2,y1:v[1],x2:v[0]+v[2]/2,y2:v[1]+v[3],
+      stroke:C.niebla,'stroke-width':2.5,opacity:.8},g);
+    if(v[3]>70) mk('line',{x1:v[0],y1:v[1]+v[3]*.42,x2:v[0]+v[2],y2:v[1]+v[3]*.42,
+      stroke:C.niebla,'stroke-width':2,opacity:.55},g);
   });
-  /* contornos */
-  mk('path',{d:'M'+(L-14)+' '+T+' L'+R+' '+(T-o.rise)+' L'+R+' '+T,fill:'none',
-    stroke:C.niebla,'stroke-width':3,'stroke-linejoin':'round'},g);
-  mk('rect',{x:L,y:T,width:o.w,height:o.h,fill:'none',stroke:C.niebla,'stroke-width':3},g);
-  /* plataforma */
-  mk('rect',{x:L-20,y:B,width:o.w+40,height:24,rx:4,fill:C.i70},g);
-  mk('rect',{x:L-20,y:B,width:o.w+40,height:24,rx:4,fill:'none',stroke:C.niebla,'stroke-width':3},g);
-  mk('line',{x1:L-20,y1:B+6,x2:R+20,y2:B+6,stroke:C.niebla,'stroke-width':2,opacity:.5},g);
+  mk('path',{d:cuerpo,fill:'none',stroke:C.niebla,'stroke-width':3,'stroke-linejoin':'round'},g);
+  const y1=borde(L-OVER), y2=borde(R+OVER);         // techo a un agua con alero
+  mk('path',{d:'M'+(L-OVER)+' '+y1+' L'+(R+OVER)+' '+y2+' L'+(R+OVER)+' '+(y2-TH)
+            +' L'+(L-OVER)+' '+(y1-TH)+' Z',fill:'url(#roof)',
+      stroke:C.niebla,'stroke-width':3,'stroke-linejoin':'round'},g);
+  const PL=L-DECK-16, PR=R+16;                      // plataforma y terraza
+  mk('rect',{x:PL,y:B,width:PR-PL,height:24,rx:4,fill:C.i70},g);
+  mk('rect',{x:PL,y:B,width:PR-PL,height:24,rx:4,fill:'none',stroke:C.niebla,'stroke-width':3},g);
+  mk('line',{x1:PL,y1:B+7,x2:PR,y2:B+7,stroke:C.niebla,'stroke-width':2,opacity:.45},g);
+  if(DECK>0){
+    const BAR=B-56;
+    mk('line',{x1:PL+8,y1:BAR,x2:L-4,y2:BAR,stroke:C.niebla,'stroke-width':4,'stroke-linecap':'round'},g);
+    for(let x=PL+12;x<L-6;x+=26)
+      mk('line',{x1:x,y1:BAR,x2:x,y2:B,stroke:C.niebla,'stroke-width':2.5,opacity:.75},g);
+  }
   return g;
 }
+
 /* flecha de flujo (agua / aire) */
 function flow(p,id,len){
   const g=mk('g',{id,opacity:0},p);
@@ -377,9 +401,9 @@ function flow(p,id,len){
 (function(){ const s=$('v1');
   groundBase(s,'M-700 430 L1780 430','g1soil',520);
   const vol=mk('g',{id:'g1vol',opacity:0},s);
-  [344,452,560,668].forEach(x=>pile(vol,x,306,500,40));
-  house(vol,{x:306,y:160,w:408,h:124,rise:58,
-    win:[[352,196,104,66],[520,196,104,66],[640,206,44,78]]});
+  [232,330,448,566,690].forEach(x=>pile(vol,x,308,500,40));
+  house(vol,{x:360,y:150,w:380,h:134,rise:62,deck:170,
+    win:[[392,176,114,96],[540,186,88,54],[664,198,48,86]]});
   groundFade(s,'M-700 430 L1780 430',430,'g1fade');
   const g=mk('g',{id:'g1line'},s);
   stroke(g,'M-680 430 H1760',{c:C.madera,w:3});
@@ -504,9 +528,9 @@ function S3(t){
   const f=mk('g',{id:'g4flow'},s);
   for(let i=0;i<5;i++) flow(f,'g4f'+i,104);
   const vol=mk('g',{id:'g4vol',opacity:0},s);
-  [344,452,560,668].forEach(x=>pile(vol,x,306,500,40));
-  house(vol,{x:306,y:160,w:408,h:124,rise:58,
-    win:[[352,196,104,66],[520,196,104,66],[640,206,44,78]]});
+  [232,330,448,566,690].forEach(x=>pile(vol,x,308,500,40));
+  house(vol,{x:360,y:150,w:380,h:134,rise:62,deck:170,
+    win:[[392,176,114,96],[540,186,88,54],[664,198,48,86]]});
   groundFade(s,'M-700 430 L1780 430',430,'g4fade');
   const g=mk('g',{id:'g4line'},s);
   stroke(g,'M-680 430 H1760',{c:C.madera,w:3});

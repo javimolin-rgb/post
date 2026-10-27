@@ -214,11 +214,38 @@ locución.
 
 ## Cámara
 
-`CAM` (en el script del HTML) encadena las escenas: cada una entra con el
-encuadre donde terminó la anterior y sale empujando o retrocediendo hacia la
-siguiente, de modo que el corte se lee como un movimiento continuo. Del tubo
-se sale hacia el terreno, de la casa se entra bajo el piso, y de ahí a un
-pilote. La cámara sólo mueve la ilustración: el texto se queda quieto.
+`CAM` encadena las escenas en un solo movimiento. La regla que lo hace
+funcionar: **la escena que sale y la que entra tienen que moverse en la misma
+dirección**. Si la saliente se acerca, la entrante arranca abierta (`sIn<1`) y
+sigue cerrando; si la saliente se aleja, la entrante arranca cerrada
+(`sIn>1`) y sigue abriendo. Cuando esto no se cumple, las dos cámaras se
+pelean y el corte salta.
+
+Además la salida **acelera** y la entrada **frena**, así el movimiento no se
+detiene en el corte. Las dos curvas son las del manual (§7); la de salida se
+usa sólo en su primera mitad, que es la parte que acelera.
+
+| Corte | Qué hace |
+|---|---|
+| gancho → pilote | se acerca |
+| pilote → terreno | se aleja |
+| terreno → casa | se aleja |
+| casa → cámara de aire | se acerca |
+| cámara de aire → pilote | se acerca |
+| pilote → cierre | se aleja |
+
+La cámara sólo mueve la ilustración: el texto se queda quieto.
+
+## Subtítulos
+
+Cada línea va en su **placa propia** (`#subs .ln`): fondo Azul Origen al 93 %,
+esquinas redondeadas y un filo claro muy tenue. Se lee como un subtítulo y no
+como texto suelto encima del dibujo. El manual prohíbe la caja negra y dice
+que el negro de la marca es Azul Origen (§2, §6), así que la placa es de ese
+color: en pantalla se ve negra, pero está dentro de la paleta.
+
+Con las placas resolviendo el contraste, el degradado de fondo bajó a 42 % y
+queda sólo para asentar la zona.
 
 Por eso el terreno se dibuja de `x=-700` a `x=1780` y hasta `y=1800`: al
 alejarse la cámara, el borde del suelo no puede entrar en cuadro.
@@ -230,8 +257,11 @@ Las piezas no son trazo plano: tienen volumen, dentro de la paleta del manual.
 - **Pilote** (`pile()`): cilindro con degradado `#pvc` (borde oscuro → brillo →
   caída), collar superior y, con `{cut:[y1,y2]}`, ventana de corte que muestra
   el hormigón (`#core`), los áridos y la armadura en Madera.
-- **Casa** (`house()`): volumen con `#wall` y `#roof`, entablado horizontal en
-  Madera y vanos en Madera con contorno Niebla.
+- **Casa** (`house()`): el volumen sigue el lenguaje de las casas Neorigen —
+  techo **a un agua** con alero generoso a ambos lados, **terraza con
+  barandilla** sobre sus propios pilotes, **ventanal** de piso a cielo y
+  entablado **vertical** en Madera que acompaña la pendiente del techo. El
+  canto superior del volumen es la misma recta del techo, no un rectángulo.
 - **Terreno**: `groundBase()` dibuja el suelo vegetal, el estrato firme y los
   áridos; `groundFade()` va **después** de los pilotes y es lo que entierra de
   verdad lo que está bajo la línea de tierra (cara frontal de suelo + velo de
