@@ -1,5 +1,6 @@
 video/frames/
 video/_vo/
 video/_mu/
+video/_az/
 video/voice/
 video/*.wav

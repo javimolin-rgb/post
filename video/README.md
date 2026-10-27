@@ -155,6 +155,39 @@ sonar extranjera en Chile. Para la locución definitiva conviene un servicio:
 Lo más fiel a la marca sería clonar la voz de alguien del equipo y usarla
 siempre: queda chilena de verdad y no depende del catálogo de nadie.
 
+### Voces de Microsoft: chilena, es-US y neutras latinas
+
+`muestras-azure.py` genera muestras de las voces neuronales de Microsoft, que
+sí incluyen **español de Chile**. Usa `edge-tts` (necesita el proxy: toma
+`HTTPS_PROXY` del entorno).
+
+| | Voz | |
+|---|---|---|
+| 1 | `es-CL-LorenzoNeural` | hombre, Chile |
+| 2 | `es-CL-CatalinaNeural` | mujer, Chile |
+| 3 | `es-US-AlonsoNeural` | hombre, Estados Unidos |
+| 4 | `es-US-PalomaNeural` | mujer, Estados Unidos |
+| 5 | `es-CO-GonzaloNeural` | hombre, Colombia |
+| 6 | `es-PE-AlexNeural` | hombre, Perú |
+
+> **Ese audio es solo para elegir.** `edge-tts` va contra el servicio de
+> lectura en voz alta de Edge, que no está licenciado para publicar. Las
+> mismas voces sí lo están en **Azure Speech**, que tiene capa gratuita de
+> sobra para estas 12 líneas. Por eso la maqueta del video sigue con piper,
+> que es abierto.
+
+Para la locución definitiva, con licencia:
+
+```bash
+export AZURE_SPEECH_KEY=...
+export AZURE_SPEECH_REGION=eastus
+python3 voz-azure.py --voz es-CL-LorenzoNeural     # --rate -5% si va apurada
+```
+
+Deja `voz-azure.wav` alineado a los mismos tiempos. Después hay que apuntar la
+mezcla de `audio.py` a ese archivo, correr `audio.py --voice` para que los
+subtítulos tomen las duraciones reales, y volver a renderizar.
+
 ### Muestras para elegir locutor
 
 ```bash
