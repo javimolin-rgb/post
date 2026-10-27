@@ -226,7 +226,8 @@ if '--voice' in sys.argv:
                 ["Entre el suelo y el piso", "circula aire."], 31.80),
         (28.55, "Eso es lo que mantiene la casa seca.",
                 ["Eso es lo que mantiene", "la casa seca."], 31.80),
-        (32.25, "A las termitas no les interesa el PVC.",
+        # se escribe fonético para el TTS; el subtítulo mantiene "PVC"
+        (32.25, "A las termitas no les interesa el pe ve ce.",
                 ["A las termitas", "no les interesa el PVC."], 38.00),
         (35.70, "Se instala y se olvida.",
                 ["Se instala", "y se olvida."], 38.00),

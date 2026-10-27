@@ -155,6 +155,30 @@ sonar extranjera en Chile. Para la locución definitiva conviene un servicio:
 Lo más fiel a la marca sería clonar la voz de alguien del equipo y usarla
 siempre: queda chilena de verdad y no depende del catálogo de nadie.
 
+### Muestras para elegir locutor
+
+```bash
+python3 muestras.py     # -> muestras/
+```
+
+Genera un MP3 por voz (cada una se presenta sola, así se sabe cuál es cuál),
+uno con las seis seguidas para comparar, y `prueba-pronunciacion.mp3`.
+
+### Pronunciación
+
+El TTS lee mal las siglas y los dominios. Por eso en `audio.py` cada línea
+tiene **el texto hablado separado del subtítulo**: se escribe fonético para
+que suene bien y en pantalla se lee como corresponde.
+
+| Se escribe para la voz | Aparece en pantalla |
+|---|---|
+| `pe ve ce` | PVC |
+| `neorigen punto ce ele` | neorigen.cl |
+
+Al cambiar de voz hay que volver a correr `audio.py --voice` y después
+`render.js`: los tiempos de los subtítulos salen de la duración real de cada
+locución.
+
 ## Cámara
 
 `CAM` (en el script del HTML) encadena las escenas: cada una entra con el
