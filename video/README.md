@@ -101,6 +101,28 @@ entra en la escena 02 y crece en la 03, el agua que escurre, el golpe de cada
 pilote al colocarse, el vaciado del hormigón, los tres descartes de la escena
 05 y un soplo suave en cada transición de cámara.
 
+### Música
+
+El lecho musical también se sintetiza en `audio.py`: piano de fieltro
+(parciales que decaen + golpe de martillo) sobre un pad cálido. La progresión
+es Am – F – C – Dm – F – Am – C y **cada acorde cambia en el corte de escena**,
+por eso la música sigue el montaje. Son unas 20 notas en 43 s: calmo por
+construcción, como pide §9.
+
+- `MUS_LEVEL` controla cuánto entra en la mezcla (por defecto 0.115, que deja
+  la música ~8 dB bajo el conjunto).
+- `musica.wav` se escribe aparte, por si se quiere rebalancear o reemplazar.
+
+Alternativas verificadas si se prefiere una pista grabada:
+
+| Fuente | Licencia | Atribución |
+|---|---|---|
+| [Musopen — Complete Chopin Collection](https://archive.org/details/musopen-chopin) | CC0 | No |
+| FreePD | Dominio público | No |
+| Incompetech (Kevin MacLeod) | CC BY 4.0 | **Sí**, en el caption |
+
+### Voz
+
 La voz es una **maqueta** (TTS, masculina es-MX). Necesita el modelo, que no
 está en el repo por peso:
 
@@ -119,6 +141,19 @@ subtítulos con sus tiempos reales dentro de `pilotes-reel.html`** (bloque
 `render.js` después. Si se cambia una locución, hay que volver a renderizar.
 
 `node render.js --nosubs` genera los fotogramas sin la capa de subtítulos.
+
+**El acento no se puede arreglar acá:** piper no tiene voz chilena. Las únicas
+opciones en español son es-MX (la que usamos), es-AR y es-ES; cualquiera va a
+sonar extranjera en Chile. Para la locución definitiva conviene un servicio:
+
+| Servicio | Por qué |
+|---|---|
+| **Azure Speech** | Es el único con voces **nativas de Chile**: `es-CL-LorenzoNeural` (hombre) y `es-CL-CatalinaNeural` (mujer). Confirmar los identificadores en la documentación de Azure antes de integrarlo. |
+| **ElevenLabs** | La más citada por naturalidad en español y permite clonar una voz propia, que sería lo ideal para la marca. Su español neutro tiende a sonar peninsular, así que hay que elegir bien la voz. |
+| **Google Cloud TTS / Amazon Polly** | Alternativas con voces latinas, sin opción chilena nativa. |
+
+Lo más fiel a la marca sería clonar la voz de alguien del equipo y usarla
+siempre: queda chilena de verdad y no depende del catálogo de nadie.
 
 ## Cámara
 

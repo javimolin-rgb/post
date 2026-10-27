@@ -119,6 +119,66 @@ for t0, lo, hi, g in [(4.00,220,1700,.085),(10.80,160,1200,.075),
 # 10 · cierre
 at(mix, 38.0, whoosh(2.4, 60, 420), 0.055)
 
+# ---------------------------------------------------------------- música
+# Lecho instrumental propio: piano de fieltro sintetizado y pad cálido.
+# Los acordes cambian exactamente en los cortes de escena, así la música
+# acompaña el montaje en vez de correr por debajo sin relación.
+NOTE = {'F2':87.31,'A2':110.00,'C3':130.81,'D3':146.83,'E3':164.81,'F3':174.61,
+        'G3':196.00,'A3':220.00,'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,
+        'G4':392.00,'A4':440.00,'C5':523.25,'D5':587.33,'E5':659.25}
+
+def pad(f, dur, atk=1.5, rel=2.8, seed=0):
+    n = int((dur + rel) * SR); t = np.arange(n) / SR
+    g = np.random.default_rng(int(f * 10) + seed)
+    y = np.zeros(n)
+    for k, amp, det in ((1, 1.0, 0), (2, .28, 2.5), (3, .11, -3), (4, .045, 4)):
+        y += amp * np.sin(2 * np.pi * f * k * 2 ** (det / 1200) * t + g.random() * 6.283)
+    e = np.ones(n)
+    a = int(atk * SR); e[:a] = np.linspace(0, 1, a) ** 1.7
+    d = int(rel * SR); e[-d:] *= np.linspace(1, 0, d) ** 1.8
+    e *= .86 + .14 * np.sin(2 * np.pi * .085 * t + seed)
+    return band(y * e, None, 1250)
+
+def pluck(f, dur=3.4):
+    """Nota de piano de fieltro: parciales que decaen + golpe de martillo."""
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.zeros(n)
+    for k, amp, dec in ((1, 1.0, 2.8), (2, .40, 1.7), (3, .17, 1.0),
+                        (4, .085, .70), (6, .035, .45)):
+        y += amp * np.sin(2 * np.pi * f * k * t) * np.exp(-t / dec)
+    y += band(noise(n), 900, 4200) * np.exp(-t / .012) * .16
+    a = int(.006 * SR); y[:a] *= np.linspace(0, 1, a)
+    return band(y, None, 2700)
+
+mus = np.zeros(N)
+# (inicio, acorde, bajo) — los inicios son los de las escenas
+CHORDS = [(0.0, ['A3','C4','E4'], 'A2'), (4.2, ['F3','A3','C4'], 'F2'),
+          (11.0,['C4','E4','G4'], 'C3'), (17.8,['D4','F4','A4'], 'D3'),
+          (24.6,['F3','A3','C4'], 'F2'), (31.4,['A3','C4','E4'], 'A2'),
+          (37.6,['C4','E4','G4'], 'C3')]
+for i, (t0, tones, bass) in enumerate(CHORDS):
+    t1 = CHORDS[i + 1][0] if i + 1 < len(CHORDS) else DUR
+    d = t1 - t0
+    at(mus, t0, pad(NOTE[bass], d, 1.8, 3.0, seed=i), 0.50)
+    for j, nm in enumerate(tones):
+        at(mus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
+
+MEL = [(1.60,'E5'),(3.10,'C5'),
+       (5.40,'A4'),(7.70,'C5'),(9.70,'F4'),
+       (12.10,'G4'),(14.30,'E5'),(16.20,'C5'),
+       (18.70,'D5'),(21.00,'A4'),(23.10,'F4'),
+       (25.50,'C5'),(27.70,'A4'),(29.90,'F4'),
+       (32.30,'E5'),(34.50,'C5'),(36.30,'A4'),
+       (38.60,'E5'),(40.40,'C5'),(41.80,'A4')]
+for t0, nm in MEL:
+    at(mus, t0, pluck(NOTE[nm]), 0.30)
+
+mp = np.max(np.abs(mus))
+if mp > 0: mus = mus / mp
+mus *= env([(0,0),(2.6,1),(40.4,1),(43,0)])
+MUS_LEVEL = 0.115          # va bajo: acompaña, no compite
+mix += mus * MUS_LEVEL
+
 # ---------------------------------------------------------------- estéreo
 # la lluvia y el aire se abren; los golpes quedan al centro
 wide  = band(noise(), 600, 7000) * env([(0,0),(15.6,.25),(19.0,.6),(24.2,.6),(25.8,0),(43,0)]) * 0.030
@@ -140,6 +200,7 @@ def write_wav(path, data):
 OUT = HERE.parent / 'out'
 OUT.mkdir(exist_ok=True)
 write_wav(HERE / 'sfx.wav', st)
+write_wav(HERE / 'musica.wav', np.stack([mus, mus], axis=1))   # para ajustar el balance aparte
 
 # ---------------------------------------------------------------- voz (maqueta)
 if '--voice' in sys.argv:
@@ -178,7 +239,7 @@ if '--voice' in sys.argv:
     for i, (t0, text, sub, tend) in enumerate(LINES):
         f = tmp / f'l{i:02d}.wav'
         subprocess.run([sys.executable, '-m', 'piper', '-m', str(MODEL),
-                        '-f', str(f), '--length-scale', '0.95',
+                        '-f', str(f), '--length-scale', '0.88',
                         '--noise-w-scale', '0.85'],
                        input=text.encode('utf-8'), check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

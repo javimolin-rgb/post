@@ -70,9 +70,17 @@ Origen. Si se graba con otra voz, respetar estos tiempos.
   la colocación de los pilotes, el vaciado del hormigón y el aire de la cámara
   ventilada). Está todo sintetizado desde cero en `video/audio.py`, así que es
   material propio y libre de derechos, como pide §9.
-- **Sin música.** No había pista acústica con derechos claros disponible, así
-  que se entrega sin música y se avisa (§9). Para agregarla: instrumental
-  tranquila, acústica o piano, nunca EDM ni trap.
+- **Música:** lleva un lecho instrumental propio (piano de fieltro y pad
+  cálido) sintetizado en `video/audio.py`, así que es material nuestro, sin
+  licencia que respetar ni atribución que poner. Los acordes cambian
+  exactamente en cada corte de escena. Va ~8 dB por debajo del resto de la
+  mezcla: acompaña, no compite.
+- Si se prefiere una pista grabada, dos fuentes verificadas: la **colección
+  Chopin de Musopen** en archive.org está en **CC0** (sin atribución), y
+  **FreePD** es dominio público. **Incompetech** también sirve pero es CC BY:
+  obliga a acreditar al autor en el caption. El balance se ajusta sin
+  rehacer nada cambiando `MUS_LEVEL` en `audio.py`, o montando la pista
+  nueva sobre `video/musica.wav`.
 - **La voz es una maqueta.** `...-MAQUETA-VOZ.mp4` usa una voz sintética
   masculina (es-MX) sólo para evaluar guion y tiempos. **No publicar así**:
   el manual pide voz pausada y cercana, y una voz sintética no lo es. Grabar
