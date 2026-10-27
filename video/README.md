@@ -85,6 +85,25 @@ PY
 - **Zonas seguras:** la columna de texto es `.col` (left 80, width 870, es
   decir hasta x=950). No sacar texto ni logo de ahí.
 
+## Sistema de ilustración
+
+Las piezas no son trazo plano: tienen volumen, dentro de la paleta del manual.
+
+- **Pilote** (`pile()`): cilindro con degradado `#pvc` (borde oscuro → brillo →
+  caída), collar superior y, con `{cut:[y1,y2]}`, ventana de corte que muestra
+  el hormigón (`#core`), los áridos y la armadura en Madera.
+- **Casa** (`house()`): volumen con `#wall` y `#roof`, entablado horizontal en
+  Madera y vanos en Madera con contorno Niebla.
+- **Terreno**: `groundBase()` dibuja el suelo vegetal, el estrato firme y los
+  áridos; `groundFade()` va **después** de los pilotes y es lo que entierra de
+  verdad lo que está bajo la línea de tierra (cara frontal de suelo + velo de
+  profundidad). Su parámetro `cover` gradúa cuánto se transparenta: bajo en las
+  escenas que son un corte (01, 02, 05), alto en las que no (gancho, 03, 04).
+
+Los degradados y tramas viven en un `<svg id="gdefs">` **fuera de las escenas**:
+un paint server dentro de un subárbol `display:none` no se resuelve en Chromium
+y los rellenos salen vacíos.
+
 ## Notas
 
 - Las animaciones son funciones puras del tiempo (sin CSS animations ni
