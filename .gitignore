@@ -1,1 +1,4 @@
 video/frames/
+video/_vo/
+video/voice/
+video/*.wav

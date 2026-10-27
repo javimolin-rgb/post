@@ -85,6 +85,46 @@ PY
 - **Zonas seguras:** la columna de texto es `.col` (left 80, width 870, es
   decir hasta x=950). No sacar texto ni logo de ahí.
 
+## Audio
+
+`audio.py` sintetiza toda la banda sonora con numpy — ruido filtrado en el
+dominio de la frecuencia y osciladores. No usa ninguna biblioteca de samples,
+así que es material propio y libre de derechos (§9 del manual).
+
+```bash
+python3 audio.py            # sfx.wav — ambiente y efectos
+python3 audio.py --voice    # ademas voz.wav y mezcla-voz.wav (maqueta)
+```
+
+Las capas siguen a la animación: el peso de la tierra, el aire, la lluvia que
+entra en la escena 02 y crece en la 03, el agua que escurre, el golpe de cada
+pilote al colocarse, el vaciado del hormigón, los tres descartes de la escena
+05 y un soplo suave en cada transición de cámara.
+
+La voz es una **maqueta** (TTS). Necesita el modelo, que no está en el repo:
+
+```bash
+mkdir -p voice && cd voice
+B=https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high
+curl -sSfLO $B/es_MX-claude-high.onnx
+curl -sSfLO $B/es_MX-claude-high.onnx.json
+pip install piper-tts
+```
+
+El script verifica que ninguna locución se pise con la siguiente ni se salga
+de su escena, y lo informa al generar.
+
+## Cámara
+
+`CAM` (en el script del HTML) encadena las escenas: cada una entra con el
+encuadre donde terminó la anterior y sale empujando o retrocediendo hacia la
+siguiente, de modo que el corte se lee como un movimiento continuo. Del tubo
+se sale hacia el terreno, de la casa se entra bajo el piso, y de ahí a un
+pilote. La cámara sólo mueve la ilustración: el texto se queda quieto.
+
+Por eso el terreno se dibuja de `x=-700` a `x=1780` y hasta `y=1800`: al
+alejarse la cámara, el borde del suelo no puede entrar en cuadro.
+
 ## Sistema de ilustración
 
 Las piezas no son trazo plano: tienen volumen, dentro de la paleta del manual.

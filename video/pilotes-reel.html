@@ -162,6 +162,26 @@ const SCENES=[
 ];
 const TOTAL=43.0, FADE=0.40;
 
+/* Cámara. Cada escena entra con el encuadre donde terminó la anterior y sale
+   empujando (o retrocediendo) hacia la siguiente, así el corte se lee como un
+   movimiento continuo y no como un cambio de plano. El texto no se mueve:
+   la cámara sólo afecta a la ilustración. */
+const CAM={
+  s1:{svg:'v1',ox:452,oy:400,sIn:1.05,sDrift:1.02,sOut:1.95}, // se acerca a un pilote
+  s2:{svg:'v2',ox:300,oy:290,sIn:1.26,sDrift:1.03,sOut:0.74}, // y se aleja al terreno
+  s3:{svg:'v3',ox:540,oy:300,sIn:0.88,sDrift:1.02,sOut:1.14},
+  s4:{svg:'v4',ox:510,oy:330,sIn:1.16,sDrift:1.02,sOut:1.62}, // entra bajo el piso
+  s5:{svg:'v5',ox:230,oy:330,sIn:1.30,sDrift:1.02,sOut:1.68}, // y de ahí a un pilote
+  s6:{svg:'v6',ox:200,oy:280,sIn:1.28,sDrift:1.02,sOut:0.88},
+  s7:null
+};
+function camScale(t,dur,c){
+  const e1=EOUT(cl(t/.55)), e2=EIO(cl((t-(dur-.55))/.55));
+  const base=lp(c.sIn,1,e1);
+  const mid=lp(base,c.sDrift,cl((t-.55)/Math.max(.1,dur-1.1)));
+  return lp(mid,c.sOut,e2);
+}
+
 const $=id=>document.getElementById(id);
 const el={}; SCENES.forEach((s,i)=>{el[s.id]=$(s.id); el[s.id].style.zIndex=10+i;});
 
@@ -207,14 +227,14 @@ function lbl(p,x,y,s,o={}){const n=mk('text',{x,y,fill:o.c||C.i30,'font-size':o.
 
 /* terreno: base (vegetal + estrato firme) */
 function groundBase(p,topPath,id,firmY){
-  const g=mk('g',{id},p), B=1100;
-  const area=topPath+' L1080 '+B+' L0 '+B+' Z';
+  const g=mk('g',{id},p), B=1800;
+  const area=topPath+' L1780 '+B+' L-700 '+B+' Z';
   mk('path',{d:area,fill:C.pino},g);
   mk('path',{d:area,fill:'url(#hatch)'},g);
   if(firmY!=null){
-    mk('rect',{x:0,y:firmY,width:1080,height:B-firmY,fill:C.azul,opacity:.28},g);
-    mk('rect',{x:0,y:firmY,width:1080,height:B-firmY,fill:'url(#hatchF)'},g);
-    mk('line',{x1:0,y1:firmY,x2:1080,y2:firmY,stroke:C.madera,'stroke-width':2,opacity:.55},g);
+    mk('rect',{x:-700,y:firmY,width:2480,height:B-firmY,fill:C.azul,opacity:.28},g);
+    mk('rect',{x:-700,y:firmY,width:2480,height:B-firmY,fill:'url(#hatchF)'},g);
+    mk('line',{x1:-700,y1:firmY,x2:1780,y2:firmY,stroke:C.madera,'stroke-width':2,opacity:.55},g);
     for(let i=0;i<22;i++){
       const x=(i*97+41)%1060+10, y=firmY+22+((i*53)%120);
       mk('circle',{cx:x,cy:y,r:3+((i%3)),fill:C.madera,opacity:.22},g);
@@ -226,11 +246,11 @@ function groundBase(p,topPath,id,firmY){
    así lo enterrado queda cubierto por la tierra en vez de flotar encima.
    `cover` gradúa cuánto se transparenta el suelo (menos = más corte) */
 function groundFade(p,topPath,gTop,id,cover){
-  const g=mk('g',{id},p), B=1100, f0=gTop+20, f1=gTop+370;
-  mk('path',{d:topPath+' L1080 '+B+' L0 '+B+' Z',fill:C.pino,
+  const g=mk('g',{id},p), B=1800, f0=gTop+20, f1=gTop+370;
+  mk('path',{d:topPath+' L1780 '+B+' L-700 '+B+' Z',fill:C.pino,
     opacity:cover==null?.58:cover},g);
-  mk('rect',{x:0,y:f0,width:1080,height:f1-f0,fill:'url(#soilFade)'},g);
-  mk('rect',{x:0,y:f1,width:1080,height:B-f1,fill:C.azul,opacity:.95},g);
+  mk('rect',{x:-700,y:f0,width:2480,height:f1-f0,fill:'url(#soilFade)'},g);
+  mk('rect',{x:-700,y:f1,width:2480,height:B-f1,fill:C.azul,opacity:.95},g);
   return g;
 }
 
@@ -310,14 +330,14 @@ function flow(p,id,len){
 
 /* ===================== 1 · GANCHO ===================== */
 (function(){ const s=$('v1');
-  groundBase(s,'M0 430 L1080 430','g1soil',520);
+  groundBase(s,'M-700 430 L1780 430','g1soil',520);
   const vol=mk('g',{id:'g1vol',opacity:0},s);
   [344,452,560,668].forEach(x=>pile(vol,x,306,500,40));
   house(vol,{x:306,y:160,w:408,h:124,rise:58,
     win:[[352,196,104,66],[520,196,104,66],[640,206,44,78]]});
-  groundFade(s,'M0 430 L1080 430',430,'g1fade');
+  groundFade(s,'M-700 430 L1780 430',430,'g1fade');
   const g=mk('g',{id:'g1line'},s);
-  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  stroke(g,'M-680 430 H1760',{c:C.madera,w:3});
 })();
 function S1(t){
   $('r1').style.width = EOUT(sg(t,.30,.70))*120+'px';
@@ -331,15 +351,15 @@ function S1(t){
 
 /* ===================== 2 · EL PILOTE ===================== */
 (function(){ const s=$('v2');
-  groundBase(s,'M0 430 L1080 430','g2soil',null);
+  groundBase(s,'M-700 430 L1780 430','g2soil',null);
   const vol=mk('g',{id:'g2vol',opacity:0},s);
   pile(vol,300,60,500,110,{cut:[150,430]});
   /* el hormigón sube: la tapa se retira de abajo hacia arriba */
   mk('rect',{id:'g2mask',x:252,y:150,width:96,height:280,fill:C.i85},vol);
   mk('line',{id:'g2lvl',x1:252,y1:430,x2:348,y2:430,stroke:C.niebla,'stroke-width':3},vol);
-  groundFade(s,'M0 430 L1080 430',430,'g2fade',.42);
+  groundFade(s,'M-700 430 L1780 430',430,'g2fade',.42);
   const g=mk('g',{id:'g2line'},s);
-  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  stroke(g,'M-680 430 H1760',{c:C.madera,w:3});
   const a=mk('g',{id:'g2ann'},s);
   stroke(a,'M366 150 H470',{c:C.madera,w:2});
   stroke(a,'M366 330 H470',{c:C.madera,w:2});
@@ -365,17 +385,41 @@ function S2(t){
 
 /* ===================== 3 · EL TERRENO ===================== */
 const SLOPE='M0 362 C 240 358, 330 318, 470 296 C 630 270, 800 232, 1080 206';
+const SLOPE_FULL='M-700 370 L0 362 C 240 358, 330 318, 470 296 C 630 270, 800 232, 1080 206 L1780 194';
 const P3=[180,350,520,690,860];
+let W3=null;
+function slopeYAt(x){
+  const S=W3.SAMP;
+  if(x<=S[0].x) return S[0].y;
+  for(let i=1;i<S.length;i++) if(S[i].x>=x){
+    const a=S[i-1],b=S[i], u=(x-a.x)/Math.max(1e-6,b.x-a.x);
+    return a.y+(b.y-a.y)*u;
+  }
+  return S[S.length-1].y;
+}
 (function(){ const s=$('v3');
-  groundBase(s,SLOPE,'g3soil',470);
+  groundBase(s,SLOPE_FULL,'g3soil',470);
   P3.forEach((x,i)=>{ const gp=mk('g',{id:'g3p'+i,opacity:0},s); pile(gp,x,150,508,44); });
   const pl=mk('g',{id:'g3plat',opacity:0},s);
   mk('rect',{x:140,y:112,width:760,height:30,rx:5,fill:C.i70},pl);
   mk('rect',{x:140,y:112,width:760,height:30,rx:5,fill:'none',stroke:C.niebla,'stroke-width':3},pl);
   mk('line',{x1:140,y1:120,x2:900,y2:120,stroke:C.niebla,'stroke-width':2,opacity:.5},pl);
-  groundFade(s,SLOPE,290,'g3fade',.40);
+  groundFade(s,SLOPE_FULL,290,'g3fade',.40);
   const g=mk('g',{id:'g3line'},s);
-  stroke(g,SLOPE,{c:C.madera,w:3});
+  stroke(g,SLOPE_FULL,{c:C.madera,w:3});
+  /* referencia medible de la pendiente, en el svg siempre visible */
+  const ref=mk('path',{id:'slopeRef',d:SLOPE,fill:'none',stroke:'none'},$('gdefs'));
+  const SLEN=ref.getTotalLength(), SAMP=[];
+  for(let i=0;i<=140;i++) SAMP.push(ref.getPointAtLength(SLEN*i/140));
+  W3={ref,SLEN,SAMP};
+  /* lluvia que cae sobre el terreno */
+  const rn=mk('g',{id:'g3rain'},s);
+  for(let i=0;i<18;i++) mk('line',{id:'g3r'+i,x1:0,y1:0,x2:5,y2:26,
+    stroke:C.i50,'stroke-width':3,'stroke-linecap':'round',opacity:0},rn);
+  /* escorrentía: el agua baja por la pendiente y pasa bajo la plataforma */
+  const wt=mk('g',{id:'g3wat'},s);
+  for(let i=0;i<11;i++) mk('path',{id:'g3w'+i,d:'M-20 0 Q 0 4 20 0',fill:'none',
+    stroke:C.niebla,'stroke-width':3,'stroke-linecap':'round',opacity:0},wt);
   const lv=mk('g',{id:'g3lv'},s); lbl(lv,140,76,'PLATAFORMA NIVELADA',{c:C.niebla});
   const nf=mk('g',{id:'g3nf'},s);
   lbl(nf,20,560,'SUELO FIRME',{c:C.i50});
@@ -395,20 +439,36 @@ function S3(t){
   pl.style.opacity=pp; pl.setAttribute('transform','translate(0,'+lp(-22,0,pp)+')');
   $('g3lv').style.opacity = EOUT(sg(t,3.20,.70));
   $('g3nf').style.opacity = EOUT(sg(t,1.00,.70));
+  /* el agua entra cuando los pilotes ya están puestos */
+  const wa = cl(sg(t,3.30,.90));
+  for(let i=0;i<18;i++){
+    const n=$('g3r'+i), x=30+((i*163)%1020), gy=slopeYAt(x), sp=430+((i*53)%120);
+    const ph=((t*sp)/(gy+90) + i*.173)%1;
+    n.setAttribute('transform','translate('+x+','+lp(-90,gy-8,ph)+')');
+    n.setAttribute('opacity', wa*(.26+.30*((i%3)/2)));
+  }
+  for(let i=0;i<11;i++){
+    const n=$('g3w'+i), u=1-((t*.23 + i*.0909)%1), L=W3.SLEN*u;
+    const a=W3.ref.getPointAtLength(Math.max(0,L-7));
+    const b=W3.ref.getPointAtLength(Math.min(W3.SLEN,L+7));
+    const ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+    n.setAttribute('transform','translate('+b.x+','+(b.y+7)+') rotate('+ang+')');
+    n.setAttribute('opacity', wa*Math.sin(Math.PI*(1-u))*.9);
+  }
 }
 
 /* ===================== 4 · LAS LLUVIAS ===================== */
 (function(){ const s=$('v4');
-  groundBase(s,'M0 430 L1080 430','g4soil',null);
+  groundBase(s,'M-700 430 L1780 430','g4soil',null);
   const f=mk('g',{id:'g4flow'},s);
   for(let i=0;i<5;i++) flow(f,'g4f'+i,104);
   const vol=mk('g',{id:'g4vol',opacity:0},s);
   [344,452,560,668].forEach(x=>pile(vol,x,306,500,40));
   house(vol,{x:306,y:160,w:408,h:124,rise:58,
     win:[[352,196,104,66],[520,196,104,66],[640,206,44,78]]});
-  groundFade(s,'M0 430 L1080 430',430,'g4fade');
+  groundFade(s,'M-700 430 L1780 430',430,'g4fade');
   const g=mk('g',{id:'g4line'},s);
-  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  stroke(g,'M-680 430 H1760',{c:C.madera,w:3});
   const r=mk('g',{id:'g4rain','clip-path':'url(#clRain)'},s);
   for(let i=0;i<34;i++) mk('line',{id:'g4r'+i,x1:0,y1:0,x2:6,y2:30,
     stroke:C.i50,'stroke-width':3,'stroke-linecap':'round',opacity:0},r);
@@ -439,7 +499,7 @@ function S4(t){
 
 /* ===================== 5 · LA TEMPERATURA ===================== */
 (function(){ const s=$('v5');
-  groundBase(s,'M0 430 L1080 430','g5soil',null);
+  groundBase(s,'M-700 430 L1780 430','g5soil',null);
   const a=mk('g',{id:'g5air'},s);
   for(let i=0;i<7;i++) flow(a,'g5a'+i,96);
   const vol=mk('g',{id:'g5vol',opacity:0},s);
@@ -453,9 +513,9 @@ function S4(t){
   mk('line',{x1:150,y1:236,x2:950,y2:236,stroke:C.niebla,'stroke-width':2,opacity:.6},vol);
   for(let x=186;x<950;x+=64)
     mk('line',{x1:x,y1:238,x2:x,y2:266,stroke:C.niebla,'stroke-width':2,opacity:.28},vol);
-  groundFade(s,'M0 430 L1080 430',430,'g5fade');
+  groundFade(s,'M-700 430 L1780 430',430,'g5fade');
   const g=mk('g',{id:'g5line'},s);
-  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  stroke(g,'M-680 430 H1760',{c:C.madera,w:3});
   const n=mk('g',{id:'g5nf'},s);
   lbl(n,150,172,'AISLACIÓN + PISO',{c:C.niebla});
   lbl(n,950,560,'EL FRÍO DEL SUELO NO SUBE',{c:C.i50,ta:'end'});
@@ -478,12 +538,12 @@ function S5(t){
 /* ===================== 6 · EL TIEMPO ===================== */
 const T6=['PUDRICIÓN','TERMITAS','CORROSIÓN'];
 (function(){ const s=$('v6');
-  groundBase(s,'M0 430 L1080 430','g6soil',null);
+  groundBase(s,'M-700 430 L1780 430','g6soil',null);
   const vol=mk('g',{id:'g6vol',opacity:0},s);
   pile(vol,200,60,474,96,{cut:[170,412]});
-  groundFade(s,'M0 430 L1080 430',430,'g6fade',.42);
+  groundFade(s,'M-700 430 L1780 430',430,'g6fade',.42);
   const g=mk('g',{id:'g6line'},s);
-  stroke(g,'M20 430 H1060',{c:C.madera,w:3});
+  stroke(g,'M-680 430 H1760',{c:C.madera,w:3});
   T6.forEach((w,i)=>{
     const gg=mk('g',{id:'g6i'+i},s), y=160+i*106;
     lbl(gg,380,y,w,{c:C.niebla,fs:40});
@@ -535,6 +595,10 @@ window.renderFrame=function(T){
     const fin=EIO(cl(t/FADE)), fout=1-EIO(cl((t-(s.dur-FADE))/FADE));
     n.style.opacity=Math.min(fin,fout);
     reveal(n,t); FN[s.id](t);
+    const c=CAM[s.id];
+    if(c){ const sv=$(c.svg), k=camScale(t,s.dur,c);
+      sv.style.transformOrigin=c.ox+'px '+c.oy+'px';
+      sv.style.transform='scale('+k+')'; }
   });
 };
 window.TOTAL=TOTAL;
