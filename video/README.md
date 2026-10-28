@@ -85,6 +85,14 @@ PY
 - **Zonas seguras:** la columna de texto es `.col` (left 80, width 870, es
   decir hasta x=950). No sacar texto ni logo de ahí.
 
+## Tabla de escenas
+
+`ESCENAS` en `audio.py` es la única fuente: de ahí salen los tiempos de la
+voz, los acordes de la música, cada golpe de efecto y las transiciones. El
+script la **escribe dentro del HTML** (bloque `SCENES:INICIO`/`SCENES:FIN`),
+así imagen y audio no pueden desalinearse. Para mover una escena se toca sólo
+esa tabla y se vuelve a correr `audio.py`.
+
 ## Audio
 
 `audio.py` sintetiza toda la banda sonora con numpy — ruido filtrado en el

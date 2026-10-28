@@ -45,32 +45,36 @@ resuelve la fundación en ese caso.
 ## Guion de voz en off
 
 Voz: **es-CL-CatalinaNeural** (mujer, español de Chile), a +12 % de velocidad.
+Duración total: 44 s.
 
-El guion **no repite** los textos en pantalla: los complementa y usa preguntas
-para enganchar. La tipografía dice qué es; la voz dice por qué importa. Por eso
-el video lleva subtítulos quemados propios (§9).
+El guion **no repite** los textos en pantalla: los complementa. Frases
+desarrolladas, no punteo, y el gancho abierto con una idea que se resuelve
+recién en la segunda línea. La tipografía dice qué es; la voz dice por qué
+importa. Por eso el video lleva subtítulos quemados propios (§9).
 
 | Entra | Voz en off |
 |---|---|
-| 0:00.6 | ¿Sabes sobre qué se apoya tu casa? |
-| 0:03.3 | Casi nunca se ve. |
-| 0:05.1 | El tubo queda protegiendo el hormigón. |
-| 0:08.0 | ¿Por qué no madera? Bajo tierra no dura. |
-| 0:11.6 | ¿Y si el terreno está en pendiente? |
-| 0:13.7 | Cada pilote baja lo que necesita. |
-| 0:15.7 | La casa queda a nivel, sin mover tierra. |
-| 0:18.4 | ¿Y cuando llueve fuerte? |
-| 0:20.2 | El agua sigue de largo, sin empozarse. |
-| 0:23.0 | Tampoco sube humedad del suelo. |
-| 0:25.2 | Entre el suelo y el piso circula aire. |
-| 0:27.8 | Eso mantiene la casa seca. |
-| 0:29.7 | Por eso el piso no se siente frío. |
-| 0:32.2 | ¿Termitas? No les interesa el PVC. |
-| 0:36.4 | Se instala y listo. |
-| 0:38.7 | ¿Vas a construir? Hablemos primero del terreno. |
+| 0:00.7 | Antes de la primera tabla, hay una decisión que no se ve… |
+| 0:04.6 | …sobre qué se va a parar tu casa. |
+| 0:06.8 | El tubo no se saca: queda ahí, protegiendo el hormigón. |
+| 0:10.5 | ¿Por qué no madera? Bajo tierra no dura. |
+| 0:13.9 | ¿Y si el terreno tiene pendiente? |
+| 0:16.6 | Cada pilote baja hasta el suelo firme, y la casa queda a nivel. |
+| 0:20.4 | ¿Y cuando llueve de verdad? |
+| 0:22.6 | El agua pasa por debajo, sigue de largo, y no se empoza contra nada. |
+| 0:27.0 | Entre el suelo y el piso circula aire. |
+| 0:30.1 | Por eso se mantiene seca, y el piso no se siente frío. |
+| 0:33.6 | ¿Termitas? Al PVC no le interesan. |
+| 0:37.3 | Se instala una vez, y listo. |
+| 0:39.9 | ¿Vas a construir? Entonces hablemos primero del terreno. |
 
-Las pausas no son relleno: **0,40–1,15 s dentro de cada escena** (el respiro
-después de una pregunta) y **0,47–1,24 s en los cortes**, donde cae la
+**El fraseo está escrito en la puntuación.** Los puntos suspensivos sostienen
+el gancho, los dos puntos arman el remate, las comas marcan dónde respira y
+los signos de interrogación suben la entonación. Si se cambia una coma,
+cambia la locución: es el único control de prosodia que tiene el texto plano.
+
+Las pausas no son relleno: **0,55–1,10 s dentro de cada escena** (el respiro
+después de una pregunta) y **0,55–0,85 s en los cortes**, donde cae la
 transición de cámara. Los tiempos los calcula `audio.py` con la duración real
 de cada locución, y avisa si se abre un hueco o algo se pisa.
 

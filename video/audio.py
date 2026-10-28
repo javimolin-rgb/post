@@ -13,7 +13,14 @@ import os, sys, wave, subprocess, pathlib
 import numpy as np
 
 SR   = 48000
-DUR  = 43.0
+# Tabla de escenas: manda sobre todo lo demás. audio.py la escribe también
+# dentro del HTML, así imagen, voz, música y efectos no pueden desalinearse.
+ESCENAS = [(0.00, 6.60), (6.20, 7.40), (13.20, 7.00), (19.80, 7.00),
+           (26.40, 7.00), (33.00, 6.40), (39.00, 5.00)]
+ini = lambda i: ESCENAS[i][0]
+fin = lambda i: ESCENAS[i][0] + ESCENAS[i][1]
+
+DUR  = round(fin(len(ESCENAS) - 1), 2)
 N    = int(SR * DUR)
 T    = np.arange(N) / SR
 HERE = pathlib.Path(__file__).resolve().parent
@@ -75,49 +82,49 @@ mix = np.zeros(N)
 drone  = band(noise(), None, 95, slope=6) * 1.0
 drone += np.sin(2 * np.pi * 47.0 * T) * 0.25
 drone += np.sin(2 * np.pi * 70.5 * T) * 0.12
-mix += drone * env([(0,0),(2.2,1),(37.0,1),(41.6,.85),(43,0)]) * lfo(.045,.28) * 0.055
+mix += drone * env([(0,0),(2.2,1),(ini(6)-1.6,1),(DUR-2.4,.85),(DUR,0)]) * lfo(.045,.28) * 0.055
 
 # 2 · aire: colchón muy bajo, sube en la escena de ventilación
 air = band(noise(), 240, 1900)
-mix += air * env([(0,.20),(24.6,.22),(26.3,.75),(31.4,.55),(37.6,.25),(43,0)]) * lfo(.07,.45) * 0.030
+mix += air * env([(0,.20),(ini(4),.22),(ini(4)+1.7,.75),(ini(5),.55),(ini(6),.25),(DUR,0)]) * lfo(.07,.45) * 0.030
 
 # 3 · lluvia: aparece en la pendiente y crece en la escena de lluvias
 rain = band(noise(), 750, 7500) * 0.8 + band(noise(), 200, 750) * 0.35
-mix += rain * env([(0,0),(14.3,0),(15.6,.34),(17.8,.40),(19.0,1.0),
-                   (24.2,1.0),(25.6,.12),(26.6,0),(43,0)]) * 0.075
+mix += rain * env([(0,0),(ini(2)+3.3,0),(ini(2)+4.6,.34),(fin(2)-2.0,.40),(ini(3)+1.2,1.0),
+                   (fin(3)-0.6,1.0),(ini(4)+1.2,.12),(ini(4)+2.2,0),(DUR,0)]) * 0.075
 
 # 4 · el agua que escurre: en la pendiente y bajo la casa
 flow = band(noise(), 380, 3200) * lfo(.55,.55) * lfo(.23,.35,1.2)
-mix += flow * env([(0,0),(14.8,0),(16.0,.55),(18.2,.45),(19.8,.85),
-                   (24.4,.75),(25.8,0),(43,0)]) * 0.055
+mix += flow * env([(0,0),(ini(2)+2.0,0),(ini(2)+3.2,.55),(fin(2)-1.6,.45),(ini(3)+0.4,.85),
+                   (fin(3)-2.0,.75),(ini(4)+1.4,0),(DUR,0)]) * 0.055
 
 # 5 · la casa se asienta sobre los pilotes (gancho)
 at(mix, 1.62, thud(95, 44, .9, .26, .25), 0.24)
 
 # 6 · colocación de los cinco pilotes en la pendiente
-for i, t0 in enumerate([12.65, 12.87, 13.09, 13.31, 13.53]):
+for i, t0 in enumerate([ini(2) + x for x in (1.65, 1.87, 2.09, 2.31, 2.53)]):
     at(mix, t0, thud(108 - i * 5, 54, .6, .16, .40), 0.40)
-at(mix, 14.05, thud(70, 38, .9, .30, .15), 0.22)          # la plataforma apoya
+at(mix, ini(2)+3.05, thud(70, 38, .9, .30, .15), 0.22)    # la plataforma apoya
 
 # 7 · vaciado del hormigón dentro del tubo (5,70 → 7,90)
 pn = int(2.6 * SR); pt = np.arange(pn) / SR
 pour = band(noise(pn), 140, 2600) * (0.25 + 0.75 * np.sin(np.pi * np.clip(pt/2.2,0,1))**1.5)
 pour += band(noise(pn), 60, 260) * np.clip(pt/2.2, 0, 1) * 0.8
-at(mix, 5.70, pour, 0.085)
-at(mix, 7.95, thud(85, 40, .7, .22, .20), 0.20)           # queda lleno
+at(mix, ini(1)+1.50, pour, 0.085)
+at(mix, ini(1)+3.75, thud(85, 40, .7, .22, .20), 0.20)    # queda lleno
 
 # 8 · los tres descartes (no se pudre / termitas / corrosión)
-for t0 in (33.05, 33.60, 34.15):
+for t0 in (ini(5)+1.65, ini(5)+2.20, ini(5)+2.75):
     at(mix, t0, swipe(), 0.085)
 
 # 9 · transiciones de cámara
-for t0, lo, hi, g in [(4.00,220,1700,.085),(10.80,160,1200,.075),
-                      (17.60,220,1700,.080),(24.40,260,2000,.085),
-                      (31.20,200,1500,.080),(37.40,140,1000,.070)]:
+for (lo, hi, g), k in zip([(220,1700,.085),(160,1200,.075),(220,1700,.080),
+                           (260,2000,.085),(200,1500,.080),(140,1000,.070)], range(1,7)):
+    t0 = ini(k) - 0.20
     at(mix, t0, whoosh(.85, lo, hi), g)
 
 # 10 · cierre
-at(mix, 38.0, whoosh(2.4, 60, 420), 0.055)
+at(mix, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055)
 
 # ---------------------------------------------------------------- música
 # Lecho instrumental propio: piano de fieltro sintetizado y pad cálido.
@@ -152,10 +159,10 @@ def pluck(f, dur=3.4):
 
 mus = np.zeros(N)
 # (inicio, acorde, bajo) — los inicios son los de las escenas
-CHORDS = [(0.0, ['A3','C4','E4'], 'A2'), (4.2, ['F3','A3','C4'], 'F2'),
-          (11.0,['C4','E4','G4'], 'C3'), (17.8,['D4','F4','A4'], 'D3'),
-          (24.6,['F3','A3','C4'], 'F2'), (31.4,['A3','C4','E4'], 'A2'),
-          (37.6,['C4','E4','G4'], 'C3')]
+ACORDES = [(['A3','C4','E4'],'A2'), (['F3','A3','C4'],'F2'), (['C4','E4','G4'],'C3'),
+           (['D4','F4','A4'],'D3'), (['F3','A3','C4'],'F2'), (['A3','C4','E4'],'A2'),
+           (['C4','E4','G4'],'C3')]
+CHORDS = [(ini(i), t, b) for i, (t, b) in enumerate(ACORDES)]
 for i, (t0, tones, bass) in enumerate(CHORDS):
     t1 = CHORDS[i + 1][0] if i + 1 < len(CHORDS) else DUR
     d = t1 - t0
@@ -163,25 +170,24 @@ for i, (t0, tones, bass) in enumerate(CHORDS):
     for j, nm in enumerate(tones):
         at(mus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
 
-MEL = [(1.60,'E5'),(3.10,'C5'),
-       (5.40,'A4'),(7.70,'C5'),(9.70,'F4'),
-       (12.10,'G4'),(14.30,'E5'),(16.20,'C5'),
-       (18.70,'D5'),(21.00,'A4'),(23.10,'F4'),
-       (25.50,'C5'),(27.70,'A4'),(29.90,'F4'),
-       (32.30,'E5'),(34.50,'C5'),(36.30,'A4'),
-       (38.60,'E5'),(40.40,'C5'),(41.80,'A4')]
+# dos o tres notas por escena, en tiempos relativos a cada una
+MEL_REL = [[(1.6,'E5'),(3.3,'C5'),(5.0,'A4')], [(1.2,'A4'),(3.4,'C5'),(5.4,'F4')],
+           [(1.3,'G4'),(3.3,'E5'),(5.3,'C5')], [(1.3,'D5'),(3.5,'A4'),(5.5,'F4')],
+           [(1.2,'C5'),(3.4,'A4'),(5.4,'F4')], [(1.3,'E5'),(3.3,'C5'),(5.0,'A4')],
+           [(1.0,'E5'),(2.8,'C5'),(4.2,'A4')]]
+MEL = [(ini(i)+dt, nm) for i, g in enumerate(MEL_REL) for dt, nm in g]
 for t0, nm in MEL:
     at(mus, t0, pluck(NOTE[nm]), 0.30)
 
 mp = np.max(np.abs(mus))
 if mp > 0: mus = mus / mp
-mus *= env([(0,0),(2.6,1),(40.4,1),(43,0)])
+mus *= env([(0,0),(2.6,1),(DUR-2.6,1),(DUR,0)])
 MUS_LEVEL = 0.115          # va bajo: acompaña, no compite
 mix += mus * MUS_LEVEL
 
 # ---------------------------------------------------------------- estéreo
 # la lluvia y el aire se abren; los golpes quedan al centro
-wide  = band(noise(), 600, 7000) * env([(0,0),(15.6,.25),(19.0,.6),(24.2,.6),(25.8,0),(43,0)]) * 0.030
+wide  = band(noise(), 600, 7000) * env([(0,0),(ini(2)+4.6,.25),(ini(3)+1.2,.6),(fin(3)-0.6,.6),(ini(4)+1.4,0),(DUR,0)]) * 0.030
 L = mix + wide
 R = mix - wide
 st = np.stack([L, R], axis=1)
@@ -217,46 +223,53 @@ RATE = '+12%'
 
 VO_SCENES = [
  # (inicio, fin, retardo, [(hablado, subtítulo, pausa después), ...])
- (0.0, 4.6, 0.55, [
-   ("¿Sabes sobre qué se apoya tu casa?",
-    ["¿Sabes sobre qué", "se apoya tu casa?"], 0.45),
-   ("Casi nunca se ve.",
-    ["Casi nunca se ve."], 0.0)]),
- (4.2, 11.4, 0.60, [
-   ("El tubo queda protegiendo el hormigón.",
-    ["El tubo queda", "protegiendo el hormigón."], 0.50),
+ # Los puntos suspensivos, las comas y los dos puntos son los que dan el
+ # fraseo: el sintetizador respira donde está escrita la respiración.
+ (ini(0), fin(0), 0.55, [
+   ("Antes de la primera tabla, hay una decisión que no se ve…",
+    ["Antes de la primera tabla,", "hay una decisión que no se ve…"], 0.40),
+   ("sobre qué se va a parar tu casa.",
+    ["Sobre qué se va a parar tu casa."], 0.0)]),
+ (ini(1), fin(1), 0.60, [
+   ("El tubo no se saca: queda ahí, protegiendo el hormigón.",
+    ["El tubo no se saca: queda ahí,", "protegiendo el hormigón."], 0.50),
    ("¿Por qué no madera? Bajo tierra no dura.",
     ["¿Por qué no madera?", "Bajo tierra no dura."], 0.0)]),
- (11.0, 18.2, 0.60, [
-   ("¿Y si el terreno está en pendiente?",
-    ["¿Y si el terreno", "está en pendiente?"], 0.45),
-   ("Cada pilote baja lo que necesita.",
-    ["Cada pilote baja", "lo que necesita."], 0.40),
-   ("La casa queda a nivel, sin mover tierra.",
-    ["La casa queda a nivel,", "sin mover tierra."], 0.0)]),
- (17.8, 25.0, 0.60, [
-   ("¿Y cuando llueve fuerte?",
-    ["¿Y cuando llueve fuerte?"], 0.45),
-   ("El agua sigue de largo, sin empozarse.",
-    ["El agua sigue de largo,", "sin empozarse."], 0.45),
-   ("Tampoco sube humedad del suelo.",
-    ["Tampoco sube humedad", "del suelo."], 0.0)]),
- (24.6, 31.8, 0.60, [
+ (ini(2), fin(2), 0.60, [
+   ("¿Y si el terreno tiene pendiente?",
+    ["¿Y si el terreno", "tiene pendiente?"], 0.45),
+   ("Cada pilote baja hasta el suelo firme, y la casa queda a nivel.",
+    ["Cada pilote baja al suelo firme,", "y la casa queda a nivel."], 0.0)]),
+ (ini(3), fin(3), 0.60, [
+   ("¿Y cuando llueve de verdad?",
+    ["¿Y cuando llueve de verdad?"], 0.45),
+   ("El agua pasa por debajo, sigue de largo, y no se empoza contra nada.",
+    ["El agua pasa por debajo", "y no se empoza contra nada."], 0.0)]),
+ (ini(4), fin(4), 0.60, [
    ("Entre el suelo y el piso circula aire.",
     ["Entre el suelo y el piso", "circula aire."], 0.50),
-   ("Eso mantiene la casa seca.",
-    ["Eso mantiene la casa seca."], 0.45),
-   ("Por eso el piso no se siente frío.",
-    ["Por eso el piso", "no se siente frío."], 0.0)]),
- (31.4, 38.0, 0.60, [
-   ("¿Termitas? No les interesa el pe ve ce.",
-    ["¿Termitas?", "No les interesa el PVC."], 0.45),
-   ("Se instala y listo.",
-    ["Se instala y listo."], 0.0)]),
- (37.6, 43.0, 0.60, [
-   ("¿Vas a construir? Hablemos primero del terreno.",
+   ("Por eso se mantiene seca, y el piso no se siente frío.",
+    ["Por eso se mantiene seca,", "y el piso no se siente frío."], 0.0)]),
+ (ini(5), fin(5), 0.60, [
+   ("¿Termitas? Al pe ve ce no le interesan.",
+    ["¿Termitas?", "Al PVC no le interesan."], 0.45),
+   ("Se instala una vez, y listo.",
+    ["Se instala una vez, y listo."], 0.0)]),
+ (ini(6), fin(6), 0.60, [
+   ("¿Vas a construir? Entonces hablemos primero del terreno.",
     ["¿Vas a construir?", "Hablemos primero del terreno."], 0.0)]),
 ]
+
+# la tabla de escenas también va al HTML, para que imagen y audio no deriven
+_html = HERE / 'pilotes-reel.html'
+_src = _html.read_text(encoding='utf-8')
+_filas = ',\n  '.join("{id:'s%d',start:%.2f,dur:%.2f}" % (k+1, a, b)
+                      for k, (a, b) in enumerate(ESCENAS))
+_k0 = _src.index('/* SCENES:INICIO */'); _k1 = _src.index('/* SCENES:FIN */')
+_html.write_text(_src[:_k0] + '/* SCENES:INICIO */\nconst SCENES=[\n  ' + _filas
+                 + '\n];\nconst TOTAL=%.2f;\n' % DUR + _src[_k1:], encoding='utf-8')
+print(f'  escenas escritas en el HTML (total {DUR:.2f}s)')
+
 
 if '--voice' in sys.argv:
     import asyncio, edge_tts
