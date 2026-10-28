@@ -66,7 +66,11 @@ importa. Por eso el video lleva subtítulos quemados propios (§9).
 | 0:30.1 | Por eso se mantiene seca, y el piso no se siente frío. |
 | 0:33.6 | ¿Termitas? Al PVC no le interesan. |
 | 0:37.3 | Se instala una vez, y listo. |
-| 0:39.9 | ¿Vas a construir? Entonces hablemos primero del terreno. |
+| 0:40.1 | ¿Vas a construir? ¡Conversemos! *(sin subtítulo)* |
+
+El cierre va **sin subtítulo**: ahí manda el lockup y el CTA en pantalla,
+y una placa de texto encima sólo competiría. En `audio.py`, una línea con la
+lista de subtítulo vacía (`[]`) se locuta pero no se dibuja.
 
 **El fraseo está escrito en la puntuación.** Los puntos suspensivos sostienen
 el gancho, los dos puntos arman el remate, las comas marcan dónde respira y

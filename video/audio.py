@@ -256,8 +256,8 @@ VO_SCENES = [
    ("Se instala una vez, y listo.",
     ["Se instala una vez, y listo."], 0.0)]),
  (ini(6), fin(6), 0.60, [
-   ("¿Vas a construir? Entonces hablemos primero del terreno.",
-    ["¿Vas a construir?", "Hablemos primero del terreno."], 0.0)]),
+   # sin subtítulo: en el cierre manda el lockup, no una placa de texto
+   ("¿Vas a construir? ¡Conversemos!", [], 0.0)]),
 ]
 
 # la tabla de escenas también va al HTML, para que imagen y audio no deriven
@@ -379,7 +379,7 @@ if '--voice' in sys.argv:
 
     rows = ',\n  '.join(
         '{a:%.2f,b:%.2f,l:[%s]}' % (a0, a1, ','.join(repr(x) for x in sub))
-        for a0, a1, _s, _t, sub in spans)
+        for a0, a1, _s, _t, sub in spans if sub)
     html = HERE / 'pilotes-reel.html'
     src = html.read_text(encoding='utf-8')
     k0 = src.index('/* SUBS:INICIO */'); k1 = src.index('/* SUBS:FIN */')
