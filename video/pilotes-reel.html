@@ -598,7 +598,7 @@ function S5(t){
 }
 
 /* ===================== 6 · EL TIEMPO ===================== */
-const T6=['PUDRICIÓN','TERMITAS','CORROSIÓN'];
+const T6=['DEGRADACIÓN','TERMITAS','CORROSIÓN'];
 (function(){ const s=$('v6');
   groundBase(s,'M-700 430 L1780 430','g6soil',null);
   const vol=mk('g',{id:'g6vol',opacity:0},s);
@@ -624,7 +624,7 @@ function S6(t){
     const st=1.30+i*.55;
     $('g6i'+i).style.opacity = EOUT(sg(t,st,.70));
     const q=EOUT(sg(t,st+.35,.55));
-    $('g6s'+i).setAttribute('x2', lp(376, 376+(w.length*25+20), q));
+    $('g6s'+i).setAttribute('x2', lp(376, 376+(w.length*27+20), q));
   });
 }
 
