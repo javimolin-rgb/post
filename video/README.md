@@ -196,6 +196,36 @@ Deja `voz-azure.wav` alineado a los mismos tiempos. Después hay que apuntar la
 mezcla de `audio.py` a ese archivo, correr `audio.py --voice` para que los
 subtítulos tomen las duraciones reales, y volver a renderizar.
 
+### Motores libres: lo que se revisó
+
+Se clonó **debpalash/VoiceStudio** (AGPL-3.0) para ver si algún motor libre
+daba una voz más realista. Conclusión: **no resuelve el problema de fondo**,
+que no es técnico sino de licencia.
+
+Su propio inventario (`backend/config/model_licenses.json`) tiene **66
+registros de modelos y los 66 están marcados `commercial_use: false`**. Su
+documentación lo dice sin rodeos: ese flag significa "revisado y autorizado",
+y *«No record currently makes that claim»*. El motor por defecto (OmniVoice)
+es uno de los cuatro explícitamente no comerciales. Las etiquetas upstream
+(22 Apache-2.0, 19 MIT) son metadatos sin revisar, no permiso.
+
+Idiomas, de sus propias guías: IndexTTS 2.5 y Confucius4-TTS declaran
+español; MOSS-TTS-v1.5 (31 idiomas) y dots.tts (24) probablemente lo
+incluyen. **Ninguno tiene voz chilena.**
+
+De todos, el único instalable acá y rápido en CPU es **Kokoro** (Apache-2.0):
+`muestras-kokoro.py` genera sus tres voces en español. Suenan peninsulares,
+así que no sirven para este caso.
+
+> Nota: `kokoro` (el paquete con torch) exige Python <3.13 y el contenedor
+> tiene 3.13; hay que usar `kokoro-onnx`, que además no necesita torch ni
+> espeak-ng.
+
+**Lo único que superaría a Azure es clonar una voz chilena real** a partir de
+una grabación limpia de 15–30 s de alguien del equipo. Eso lo hacen IndexTTS
+2.5 y Confucius4-TTS (locales) y también ElevenLabs. Da una voz chilena de
+verdad y propia de la marca, en vez de elegir del catálogo de otro.
+
 ### Muestras para elegir locutor
 
 ```bash
