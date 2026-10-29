@@ -208,6 +208,27 @@ OUT.mkdir(exist_ok=True)
 write_wav(HERE / 'sfx.wav', st)
 write_wav(HERE / 'musica.wav', np.stack([mus, mus], axis=1))   # para ajustar el balance aparte
 
+# --- versión en que la música es lo ÚNICO que suena --------------------------
+# Sola y seca sonaría sintética, así que lleva una reverberación propia y un
+# poco de ancho: dos colas distintas en cada canal.
+def reverb(x, dur=2.6, pre=0.035, damp=3400, seed=0):
+    n = int(dur * SR); t = np.arange(n) / SR
+    g = np.random.default_rng(1000 + seed)
+    ir = g.standard_normal(n) * np.exp(-t * (6.2 / dur))
+    ir = band(ir, 130, damp)
+    ir[:int(pre * SR)] = 0
+    ir /= np.sqrt((ir ** 2).sum()) or 1.0
+    M = 1 << (len(x) + n - 1).bit_length()
+    return np.fft.irfft(np.fft.rfft(x, M) * np.fft.rfft(ir, M), M)[:len(x)]
+
+WET = 0.30
+solaL = mus * (1 - WET) + reverb(mus, seed=1) * WET
+solaR = mus * (1 - WET) + reverb(mus, seed=2) * WET
+sola = np.stack([solaL, solaR], axis=1)
+sp = np.max(np.abs(sola))
+if sp > 0: sola = sola / sp * 0.90
+write_wav(HERE / 'musica-sola.wav', sola)
+
 # ---------------------------------------------------------------- voz (maqueta)
 # ---------------------------------------------------------------- voz
 # Guion locutado. No repite los textos en pantalla: los complementa, y usa
