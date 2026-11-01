@@ -117,18 +117,24 @@ at(mix, ini(1)+3.75, thud(85, 40, .7, .22, .20), 0.20)    # queda lleno
 for t0 in (ini(5)+1.65, ini(5)+2.20, ini(5)+2.75):
     at(mix, t0, swipe(), 0.085)
 
-# 9 · transiciones de cámara
-# Sonaban como el "efecto de cambio de slide" de una presentación, así que van
-# apagadas: TRANS=0 las saca sin borrar el diseño. Con 0.12 vuelven como un
-# soplo apenas perceptible; sobre 0.5 vuelven a ser un efecto y se notan.
-TRANS = 0.0
+# 9 · transiciones de cámara + 10 · cierre
+# Esto es lo que el equipo escuchó como "el efecto de cambio de slide". Va en
+# un bus aparte, no directo a la mezcla, porque las dos variantes que se
+# entregan lo usan con distinta ganancia (ver TRANS_* más abajo).
+trans = np.zeros(N)
 for (lo, hi, g), k in zip([(220,1700,.085),(160,1200,.075),(220,1700,.080),
                            (260,2000,.085),(200,1500,.080),(140,1000,.070)], range(1,7)):
-    t0 = ini(k) - 0.20
-    at(mix, t0, whoosh(.85, lo, hi), g * TRANS)
+    at(trans, ini(k) - 0.20, whoosh(.85, lo, hi), g)
+at(trans, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055)   # la transición al lockup
 
-# 10 · cierre: mismo criterio, es la transición al lockup
-at(mix, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055 * TRANS)
+# Cuánto se bajan los dos sonidos que el equipo marcó —la transición de cada
+# cambio de escena y el acento del cierre— en la variante que los conserva.
+# 1.0 es como se escuchaban al principio; BAJO = 0.32 son 10 dB menos: se
+# oyen, pero no se adelantan a la imagen. 0.0 los saca del todo.
+BAJO = 0.32
+
+MUS_LEVEL = 0.115          # va bajo: acompaña, no compite
+mix += trans * BAJO
 
 # ---------------------------------------------------------------- música
 # Lecho instrumental propio: piano de fieltro sintetizado y pad cálido.
@@ -166,7 +172,24 @@ def pluck(f, dur=3.4):
     a = int(.045 * SR); y[:a] *= np.linspace(0, 1, a) ** 1.6
     return band(y, None, 1700)
 
-mus = np.zeros(N)
+def pluck_tin(f, dur=3.4):
+    """La nota tal como sonaba al principio: con el golpe de martillo.
+
+    Se conserva para la variante "con los sonidos, pero abajo": ahí lo que se
+    pidió fue bajarla de volumen, no cambiarle el timbre.
+    """
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.zeros(n)
+    for k, amp, dec in ((1, 1.0, 2.8), (2, .40, 1.7), (3, .17, 1.0),
+                        (4, .085, .70), (6, .035, .45)):
+        y += amp * np.sin(2 * np.pi * f * k * t) * np.exp(-t / dec)
+    y += band(noise(n), 900, 4200) * np.exp(-t / .012) * .16
+    a = int(.006 * SR); y[:a] *= np.linspace(0, 1, a)
+    return band(y, None, 2700)
+
+# El pad y los acordes son los mismos en las dos variantes, así que se
+# construyen una vez y después cada una le suma su melodía.
+padbus = np.zeros(N)
 # (inicio, acorde, bajo) — los inicios son los de las escenas
 ACORDES = [(['A3','C4','E4'],'A2'), (['F3','A3','C4'],'F2'), (['C4','E4','G4'],'C3'),
            (['D4','F4','A4'],'D3'), (['F3','A3','C4'],'F2'), (['A3','C4','E4'],'A2'),
@@ -175,9 +198,9 @@ CHORDS = [(ini(i), t, b) for i, (t, b) in enumerate(ACORDES)]
 for i, (t0, tones, bass) in enumerate(CHORDS):
     t1 = CHORDS[i + 1][0] if i + 1 < len(CHORDS) else DUR
     d = t1 - t0
-    at(mus, t0, pad(NOTE[bass], d, 1.8, 3.0, seed=i), 0.50)
+    at(padbus, t0, pad(NOTE[bass], d, 1.8, 3.0, seed=i), 0.50)
     for j, nm in enumerate(tones):
-        at(mus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
+        at(padbus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
 
 # Dos o tres notas por escena, en tiempos relativos a cada una.
 #
@@ -197,13 +220,54 @@ MEL_REL = [[(2.6,'E5'),(4.2,'C5'),(5.6,'A4')], [(2.5,'A4'),(4.2,'C5'),(5.9,'F4')
 # 37,1 s y ya está apagada cuando aparece el logo.
 MEL = [(ini(i)+dt, nm) for i, g in enumerate(MEL_REL) for dt, nm in g]
 MEL_LEVEL = 0.16          # era 0.30: la melodía acompaña al pad, no lo monta
-for t0, nm in MEL:
-    at(mus, t0, pluck(NOTE[nm]), MEL_LEVEL)
 
-mp = np.max(np.abs(mus))
-if mp > 0: mus = mus / mp
-mus *= env([(0,0),(2.6,1),(DUR-2.6,1),(DUR,0)])
-MUS_LEVEL = 0.115          # va bajo: acompaña, no compite
+# La melodía como sonaba al principio: con el golpe de martillo, la primera
+# nota encima del corte y el acento sobre el lockup. Es la que se entrega en
+# la variante "con los sonidos, pero abajo", sólo con menos volumen.
+MEL_TIN_REL = [[(1.6,'E5'),(3.3,'C5'),(5.0,'A4')], [(1.2,'A4'),(3.4,'C5'),(5.4,'F4')],
+               [(1.3,'G4'),(3.3,'E5'),(5.3,'C5')], [(1.3,'D5'),(3.5,'A4'),(5.5,'F4')],
+               [(1.2,'C5'),(3.4,'A4'),(5.4,'F4')], [(1.3,'E5'),(3.3,'C5'),(5.0,'A4')],
+               [(1.0,'E5'),(2.8,'C5'),(4.2,'A4')]]
+MEL_TIN = [(ini(i)+dt, nm) for i, g in enumerate(MEL_TIN_REL) for dt, nm in g]
+MEL_TIN_LEVEL = 0.30 * BAJO     # mismo sonido que al principio, 10 dB abajo
+
+def melodia(notas, nota, nivel):
+    buf = np.zeros(N)
+    for t0, nm in notas:
+        at(buf, t0, nota(NOTE[nm]), nivel)
+    return buf
+
+def masterizar(x):
+    """Normaliza al pico y aplica el fundido de entrada y salida."""
+    mp = np.max(np.abs(x))
+    if mp > 0: x = x / mp
+    return x * env([(0,0),(2.6,1),(DUR-2.6,1),(DUR,0)])
+
+# Variante A — la que se publica: melodía calma, sin transiciones.
+mus = masterizar(padbus + melodia(MEL, pluck, MEL_LEVEL))
+
+# El soplo de transición sólo existía en la mezcla con ambiente, donde se
+# apoyaba en la lluvia y el aire. Acá no hay nada de eso debajo: la música es
+# lo único que suena, así que su nivel se fija contra los acordes y no
+# heredando la proporción de la otra mezcla, que lo dejaba 26 dB abajo y
+# simplemente no se oía.
+SOPLO_DB = -15.0           # a −25 lo tapa el pad; a −8 vuelve a ser un efecto
+
+def ajustar(bus, ref, db_obj, ventanas):
+    """Ganancia para que `bus` quede `db_obj` bajo `ref` en esas ventanas."""
+    b = np.concatenate([bus[a:z] for a, z in ventanas])
+    r = np.concatenate([ref[a:z] for a, z in ventanas])
+    rb = np.sqrt((b ** 2).mean()); rr = np.sqrt((r ** 2).mean())
+    return (rr / rb) * 10 ** (db_obj / 20) if rb > 0 else 0.0
+
+VENTANAS = [(int((ini(k)-0.20) * SR), int((ini(k)+0.65) * SR)) for k in range(1, 7)]
+TRANS_MUS = ajustar(trans, padbus, SOPLO_DB, VENTANAS)
+
+# Variante B — "con los sonidos, pero abajo": la melodía original con su
+# golpe de martillo 10 dB más abajo, y el soplo en cada cambio de escena.
+mus_tin = masterizar(padbus + melodia(MEL_TIN, pluck_tin, MEL_TIN_LEVEL)
+                     + trans * TRANS_MUS)
+
 mix += mus * MUS_LEVEL
 
 # ---------------------------------------------------------------- estéreo
@@ -243,12 +307,16 @@ def reverb(x, dur=2.6, pre=0.035, damp=3400, seed=0):
     return np.fft.irfft(np.fft.rfft(x, M) * np.fft.rfft(ir, M), M)[:len(x)]
 
 WET = 0.30
-solaL = mus * (1 - WET) + reverb(mus, seed=1) * WET
-solaR = mus * (1 - WET) + reverb(mus, seed=2) * WET
-sola = np.stack([solaL, solaR], axis=1)
-sp = np.max(np.abs(sola))
-if sp > 0: sola = sola / sp * 0.90
-write_wav(HERE / 'musica-sola.wav', sola)
+def a_estereo(x):
+    y = np.stack([x * (1 - WET) + reverb(x, seed=1) * WET,
+                  x * (1 - WET) + reverb(x, seed=2) * WET], axis=1)
+    sp = np.max(np.abs(y))
+    return y / sp * 0.90 if sp > 0 else y
+
+# Las dos variantes reciben el mismo tratamiento, así se comparan de verdad:
+# lo único que cambia entre los archivos es si los sonidos están o no.
+write_wav(HERE / 'musica-sola.wav', a_estereo(mus))
+write_wav(HERE / 'musica-sonidos-bajos.wav', a_estereo(mus_tin))
 
 # ---------------------------------------------------------------- voz (maqueta)
 # ---------------------------------------------------------------- voz

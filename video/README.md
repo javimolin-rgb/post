@@ -52,6 +52,12 @@ ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sola.wav \
   -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
   ../out/neorigen-pilotes-feed-1080x1350.mp4
 
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sonidos-bajos.wav -shortest \
+  -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
+  -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
+  ../out/opcion-sonidos-bajos-1080x1920.mp4
+
 ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i sfx.wav -shortest \
   -af "loudnorm=I=-16.5:TP=-1.5:LRA=11" \
   -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
@@ -132,9 +138,10 @@ entra en la escena 02 y crece en la 03, el agua que escurre, el golpe de cada
 pilote al colocarse, el vaciado del hormigón y los tres descartes de la
 escena 05.
 
-Los soplos de transición de cámara están **apagados** (`TRANS = 0.0`): se
-leían como el efecto de sonido de un cambio de slide. Con `TRANS = 0.12`
-vuelven como un aire apenas perceptible; sobre 0.5 vuelven a ser un efecto.
+Los soplos de transición de cámara viven en el bus `trans`, aparte de la
+mezcla, porque las dos variantes que se entregan lo usan con distinta
+ganancia. `BAJO` (0.32, o sea −10 dB) es cuánto se bajan respecto de como
+sonaban al principio; `BAJO = 0.0` los saca del todo.
 
 ### Música
 
@@ -160,6 +167,28 @@ calmo por construcción, como pide §9.
   cuando aparece el lockup: ahí sólo queda el acorde resolviendo con su cola
   de reverberación.
 - `musica.wav` se escribe aparte, por si se quiere rebalancear o reemplazar.
+
+#### Las dos variantes
+
+El equipo pidió comparar las dos lecturas de "sacar o bajar mucho", así que
+`audio.py` escribe las dos con el mismo pad, los mismos acordes y el mismo
+tratamiento de reverberación y ancho. Lo único que cambia es la melodía y si
+las transiciones están.
+
+| | `musica-sola.wav` | `musica-sonidos-bajos.wav` |
+|---|---|---|
+| Melodía | `MEL` con `pluck` (sin martillo, oscura) | `MEL_TIN` con `pluck_tin` (la original) |
+| Nivel de melodía | `MEL_LEVEL` = 0.16 | `MEL_TIN_LEVEL` = 0.30 × `BAJO` |
+| 1ª nota de cada escena | +2,5 s del corte | +1,0–1,6 s (como al principio) |
+| Nota en el cierre | no | sí, 9,5 dB bajo lo que era |
+| Soplo de transición | no | sí, `SOPLO_DB` bajo la música |
+
+`SOPLO_DB` (−15 dB) no se puede fijar por proporción con la mezcla de
+ambiente: ahí el soplo se apoyaba en la lluvia y el aire, y acá la música es
+lo único que suena. Heredar esa proporción lo dejaba 26 dB abajo, o sea
+inaudible. Por eso `ajustar()` calcula la ganancia midiendo el bus contra los
+acordes en las ventanas de los cortes. A −25 dB lo tapa el pad; a −8 vuelve a
+ser un efecto.
 
 Alternativas verificadas si se prefiere una pista grabada:
 

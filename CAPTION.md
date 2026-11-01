@@ -39,10 +39,15 @@ resuelve la fundación en ese caso.
 
 | Archivo | Para qué |
 |---|---|
-| `neorigen-pilotes-reel-1080x1920.mp4` | **El que va.** Reel o historia, solo música. |
-| `neorigen-pilotes-feed-1080x1350.mp4` | Lo mismo en 4:5, si va como post de feed. |
+| `neorigen-pilotes-reel-1080x1920.mp4` | **Opción 1.** Sin los sonidos de cambio de escena ni nota al final. |
+| `opcion-sonidos-bajos-1080x1920.mp4` | **Opción 2.** Los mismos sonidos, 10 dB más abajo. A elegir entre esta y la 1. |
+| `neorigen-pilotes-feed-1080x1350.mp4` | 4:5 para feed, con el audio de la opción 1. Se rehace con el de la 2 si se elige esa. |
 | `alternativa-musica-y-ambiente-1080x1920.mp4` | Por si quieren oír la lluvia, el agua y los pilotes al colocarse. |
 | `portada-1080x1920.png` | Portada. |
+
+Las dos opciones tienen **el mismo video** y el **mismo nivel** (−13,6 LUFS):
+lo único que cambia es si los sonidos están o no, así que se comparan parejo.
+Cuando decidan, el 4:5 se rehace con ese audio en un comando.
 
 ## Notas de publicación
 
@@ -50,17 +55,21 @@ resuelve la fundación en ese caso.
   `video/audio.py`, con los acordes cambiando en cada corte de escena. Es
   material nuestro: sin licencia que respetar ni atribución que poner. Queda
   a −13,6 LUFS y −3,3 dBTP, dentro de lo que pide §9.
-- **Sin efectos en los cambios de escena y sin nota al final** (pedido del
-  equipo). Tres cosas cambiaron:
-  1. Los soplos de transición de cámara están apagados.
-  2. La nota de piano perdió el chasquido de martillo que la hacía sonar como
-     un "tin". Suena más oscura (−16 dB de brillo sobre 1800 Hz) y queda casi
-     7 dB más abajo respecto del acorde.
-  3. La primera nota de cada escena ya no cae encima del corte, sino un
-     segundo más tarde, y el cierre no lleva ninguna nota: sobre el lockup
-     sólo queda el acorde apagándose.
+- **Los sonidos de cambio de escena y la nota del final**, que el equipo pidió
+  sacar o bajar mucho, van en dos versiones para elegir:
 
-  El resto de la música es el mismo. El nivel general no cambió.
+  **Opción 1 — sin ellos.** Los soplos de transición apagados; la nota de
+  piano sin el chasquido de martillo que la hacía sonar a "tin", más oscura
+  (−16 dB de brillo sobre 1800 Hz) y casi 7 dB más abajo; la primera nota de
+  cada escena corrida un segundo después del corte; el cierre sin ninguna
+  nota.
+
+  **Opción 2 — con ellos, abajo.** Los mismos sonidos de siempre, sin
+  cambiarles el timbre, sólo el volumen: la melodía con su "tin" 10 dB más
+  abajo y el soplo de cada cambio de escena 15 dB bajo la música. En el
+  cierre, la nota queda 9,5 dB bajo lo que era.
+
+  En las dos, el resto de la música es el mismo y el nivel general no cambió.
 - **Sin voz ni subtítulos**, por decisión del equipo. El guion locutado y el
   script para generarlo con Azure siguen en el repo (`video/voz-azure.py` y
   el historial de este archivo) por si se retoma.
