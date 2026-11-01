@@ -268,17 +268,22 @@ TRANS_MUS = ajustar(trans, padbus, SOPLO_DB, VENTANAS)
 mus_tin = masterizar(padbus + melodia(MEL_TIN, pluck_tin, MEL_TIN_LEVEL)
                      + trans * TRANS_MUS)
 
+# El diseño sonoro sin nada de música, para poder montarlo bajo otra pista.
+# Se toma acá, justo antes de sumarle la nuestra.
+efectos = mix.copy()
 mix += mus * MUS_LEVEL
 
 # ---------------------------------------------------------------- estéreo
 # la lluvia y el aire se abren; los golpes quedan al centro
 wide  = band(noise(), 600, 7000) * env([(0,0),(ini(2)+4.6,.25),(ini(3)+1.2,.6),(fin(3)-0.6,.6),(ini(4)+1.4,0),(DUR,0)]) * 0.030
-L = mix + wide
-R = mix - wide
-st = np.stack([L, R], axis=1)
 
-peak = np.max(np.abs(st))
-if peak > 0: st = st / peak * 0.72
+def ensanchar(bus, tope=0.72):
+    y = np.stack([bus + wide, bus - wide], axis=1)
+    pk = np.max(np.abs(y))
+    return y / pk * tope if pk > 0 else y
+
+st  = ensanchar(mix)
+efx = ensanchar(efectos)
 
 def write_wav(path, data):
     d = np.clip(data, -1, 1)
@@ -291,6 +296,7 @@ def write_wav(path, data):
 OUT = HERE.parent / 'out'
 OUT.mkdir(exist_ok=True)
 write_wav(HERE / 'sfx.wav', st)
+write_wav(HERE / 'efectos.wav', efx)      # el diseño sonoro solo, sin música
 write_wav(HERE / 'musica.wav', np.stack([mus, mus], axis=1))   # para ajustar el balance aparte
 
 # --- versión en que la música es lo ÚNICO que suena --------------------------

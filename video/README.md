@@ -78,6 +78,24 @@ ffmpeg -y -i ../out/neorigen-pilotes-reel-1080x1920.mp4 -i musica-sola.wav \
 Para comprobar el nivel: `ffmpeg -i <mp4> -af ebur128=peak=true -f null -`.
 El manual pide ~−14 LUFS y pico ≤ −1 dBTP (§9).
 
+### Montar una pista de música de afuera
+
+El diseño sonoro se mezcla aparte con `efectos.wav` y se monta sobre el video
+que ya existe. Para que acompañe sin tapar, el bus de efectos va unos 12 dB
+bajo la música; se calcula comparando los dos RMS, no a ojo.
+
+```bash
+ffmpeg -y -i <video>.mp4 -i musica-externa.wav -i efectos.wav   -filter_complex "[2:a]volume=<ganancia>[e];[1:a][e]amix=inputs=2:normalize=0[a]"   -map 0:v:0 -map "[a]" -c:v copy   -af "afade=t=in:st=0:d=0.030,loudnorm=I=-14:TP=-1.5:LRA=11"   -c:a aac -b:a 192k -ar 48000 -ac 2 -shortest -movflags +faststart salida.mp4
+```
+
+**El `afade` de 30 ms no es decorativo.** Una pista masterizada que arranca de
+golpe a 0 dBFS hace que el codificador AAC se pase: el PCM queda en −1,5 dBFS
+pero el archivo decodificado llega a **+4,5 dBFS** en los primeros 14 ms, o
+sea clipea al reproducirse. No es falta de headroom —bajar el techo a −2,5 dBTP
+no lo arregla y a −2,0 sí, de pura casualidad—, es el arranque abrupto. Con 30
+ms de fundido el pico decodificado queda en −1,4 dBFS y deja de depender del
+techo.
+
 Fotogramas sueltos para revisar sin renderizar todo:
 
 ```bash
@@ -167,6 +185,8 @@ calmo por construcción, como pide §9.
   cuando aparece el lockup: ahí sólo queda el acorde resolviendo con su cola
   de reverberación.
 - `musica.wav` se escribe aparte, por si se quiere rebalancear o reemplazar.
+- `efectos.wav` es el diseño sonoro **sin nada de música**, para montarlo bajo
+  otra pista. Es el bus `mix` tomado justo antes de sumarle la nuestra.
 
 #### Las dos variantes
 

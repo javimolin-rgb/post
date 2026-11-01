@@ -45,6 +45,22 @@ resuelve la fundación en ese caso.
 | `alternativa-musica-y-ambiente-1080x1920.mp4` | Por si quieren oír la lluvia, el agua y los pilotes al colocarse. |
 | `portada-1080x1920.png` | Portada. |
 
+### Con la música nueva (`musica-v1`)
+
+Sobre el corte que mandó el equipo, con su música:
+
+| Archivo | Qué suena |
+|---|---|
+| `musica-v1-sin-efectos-1080x1920.mp4` | Solo la música. |
+| `musica-v1-con-efectos-1080x1920.mp4` | La música + el diseño sonoro (lluvia, agua, pilotes, vaciado, aire y las transiciones), 12 dB por debajo. |
+
+> **Ojo con los textos.** El video que mandaron tiene **los seis bloques de
+> texto reescritos** respecto de `video/pilotes-reel.html` (sólo el cierre
+> coincide). Esos archivos usan el video de ellos tal cual, copiado sin
+> recomprimir, así que conservan la copy nueva — pero si alguien vuelve a
+> renderizar desde el repo, sale la copy vieja. Hay que pasar los textos
+> nuevos al HTML antes de tocar la animación.
+
 Las dos opciones tienen **el mismo video** y el **mismo nivel** (−13,6 LUFS):
 lo único que cambia es si los sonidos están o no, así que se comparan parejo.
 Cuando decidan, el 4:5 se rehace con ese audio en un comando.
