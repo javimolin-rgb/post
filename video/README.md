@@ -31,23 +31,115 @@ Sigue `../docs/MANUAL_MARCA_VIDEO.md`.
 
 ## Re-generar
 
+El reel que se publica va **sin subtítulos y con `musica-sola.wav`** como única
+pista; `sfx.wav` es la alternativa con ambiente.
+
 ```bash
 cd video
-node render.js --fps 30 --out frames
+python3 audio.py                      # musica-sola.wav y sfx.wav
+node render.js --fps 30 --nosubs --out frames
 
-ffmpeg -y -framerate 30 -i frames/f%05d.jpg \
-  -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 -shortest \
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sola.wav -shortest \
+  -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
   -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
   -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
   ../out/neorigen-pilotes-reel-1080x1920.mp4
 
-ffmpeg -y -framerate 30 -i frames/f%05d.jpg \
-  -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 \
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sola.wav \
   -vf "crop=1080:1350:0:198" -shortest \
+  -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
   -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
   -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
   ../out/neorigen-pilotes-feed-1080x1350.mp4
+
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sonidos-bajos.wav -shortest \
+  -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
+  -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
+  ../out/opcion-sonidos-bajos-1080x1920.mp4
+
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i sfx.wav -shortest \
+  -af "loudnorm=I=-16.5:TP=-1.5:LRA=11" \
+  -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
+  ../out/alternativa-musica-y-ambiente-1080x1920.mp4
 ```
+
+**Si sólo cambia el audio** no hace falta volver a renderizar los fotogramas:
+se cambia la pista y la imagen se copia tal cual, sin recomprimir.
+
+```bash
+ffmpeg -y -i ../out/neorigen-pilotes-reel-1080x1920.mp4 -i musica-sola.wav \
+  -map 0:v:0 -map 1:a:0 -c:v copy -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
+  -c:a aac -b:a 192k -ar 48000 -ac 2 -shortest -movflags +faststart \
+  /tmp/reel.mp4 && mv /tmp/reel.mp4 ../out/neorigen-pilotes-reel-1080x1920.mp4
+```
+
+Para comprobar el nivel: `ffmpeg -i <mp4> -af ebur128=peak=true -f null -`.
+El manual pide ~−14 LUFS y pico ≤ −1 dBTP (§9).
+
+### `musica-arpegio.wav` — réplica en código de la pista del equipo
+
+El export de música del equipo traía los efectos mezclados dentro y no se
+podían cancelar, así que en vez de limpiarla se reconstruyó desde cero. Todo
+lo que define la pieza se midió sobre su archivo, **descontando los tramos
+donde su stem de efectos suena**, para no analizar lo que no es música:
+
+| | Medido en el original | En la réplica |
+|---|---|---|
+| Tonalidad | La mayor | La mayor |
+| Progresión | Fa#m – Re – La – Mi, cinco vueltas | igual |
+| Compás | 1,92 s (125 BPM, 4/4) | igual |
+| Pulso del sub y el bajo | **0,97 s**, swing 16,5 y 21,4 dB | 0,96 s, swing 15,7 y 19,2 dB |
+| Arpegio | corcheas, acento cada 0,48 s | igual |
+| Sub | pedal en Fa#1, no sigue los acordes | igual |
+| Bajo | fundamental del acorde | Fa#2 · Re2 · La2 · Mi2 |
+
+Dos cosas que no se ven a simple vista y cambiaron el resultado:
+
+- **El sub y el bajo no son un drone, pulsan.** Las envolventes de 35–70 Hz y
+  70–140 Hz tienen su periodicidad más fuerte en 0,97 s con 16 y 21 dB de
+  variación. Modelados como pedal sostenido, la réplica daba 0,31 de fuerza de
+  pulso contra 0,90 del original. Como pulso, el tempo detectado pasó de
+  67,75 BPM a 62,50 contra los 62,25 del original.
+- **Lo de debajo de 40 Hz no es música.** Ahí el original tiene −42,7 dB
+  cuando los efectos callan y −25,4 cuando suenan: es el stem de efectos. Y el
+  pico de +10 dB del primer compás es su golpe de 0,02 s, no la entrada de la
+  música. Ninguno de los dos se replica.
+
+Los niveles de las cinco capas (`GAN`) no están puestos a oído: salen de
+resolver con mínimos cuadrados no negativos, ponderados por la energía de cada
+banda, qué mezcla reproduce el reparto espectral del original.
+
+Resultado medido contra el original:
+
+| | |
+|---|---|
+| Correlación de chroma | **0,972** (ninguna nota se desvía más de 2,8 puntos) |
+| Tempo | 62,50 BPM contra 62,25 |
+| Reparto espectral | las siete bandas dentro de 5,6 puntos |
+
+Para mover algo: `ARM` tiene las notas de cada acorde, `NIVEL` el acento de
+cada corchea del compás, `GAN` el balance entre capas y `BARRAS` la
+estructura.
+
+### Montar una pista de música de afuera
+
+El diseño sonoro se mezcla aparte con `efectos.wav` y se monta sobre el video
+que ya existe. Para que acompañe sin tapar, el bus de efectos va unos 12 dB
+bajo la música; se calcula comparando los dos RMS, no a ojo.
+
+```bash
+ffmpeg -y -i <video>.mp4 -i musica-externa.wav -i efectos.wav   -filter_complex "[2:a]volume=<ganancia>[e];[1:a][e]amix=inputs=2:normalize=0[a]"   -map 0:v:0 -map "[a]" -c:v copy   -af "afade=t=in:st=0:d=0.030,loudnorm=I=-14:TP=-1.5:LRA=11"   -c:a aac -b:a 192k -ar 48000 -ac 2 -shortest -movflags +faststart salida.mp4
+```
+
+**El `afade` de 30 ms no es decorativo.** Una pista masterizada que arranca de
+golpe a 0 dBFS hace que el codificador AAC se pase: el PCM queda en −1,5 dBFS
+pero el archivo decodificado llega a **+4,5 dBFS** en los primeros 14 ms, o
+sea clipea al reproducirse. No es falta de headroom —bajar el techo a −2,5 dBTP
+no lo arregla y a −2,0 sí, de pura casualidad—, es el arranque abrupto. Con 30
+ms de fundido el pico decodificado queda en −1,4 dBFS y deja de depender del
+techo.
 
 Fotogramas sueltos para revisar sin renderizar todo:
 
@@ -106,20 +198,62 @@ python3 audio.py --voice    # ademas voz.wav y mezcla-voz.wav (maqueta)
 
 Las capas siguen a la animación: el peso de la tierra, el aire, la lluvia que
 entra en la escena 02 y crece en la 03, el agua que escurre, el golpe de cada
-pilote al colocarse, el vaciado del hormigón, los tres descartes de la escena
-05 y un soplo suave en cada transición de cámara.
+pilote al colocarse, el vaciado del hormigón y los tres descartes de la
+escena 05.
+
+Los soplos de transición de cámara viven en el bus `trans`, aparte de la
+mezcla, porque las dos variantes que se entregan lo usan con distinta
+ganancia. `BAJO` (0.32, o sea −10 dB) es cuánto se bajan respecto de como
+sonaban al principio; `BAJO = 0.0` los saca del todo.
 
 ### Música
 
 El lecho musical también se sintetiza en `audio.py`: piano de fieltro
-(parciales que decaen + golpe de martillo) sobre un pad cálido. La progresión
-es Am – F – C – Dm – F – Am – C y **cada acorde cambia en el corte de escena**,
-por eso la música sigue el montaje. Son unas 20 notas en 43 s: calmo por
-construcción, como pide §9.
+(parciales que decaen, sin golpe de martillo) sobre un pad cálido. La
+progresión es Am – F – C – Dm – F – Am – C y **cada acorde cambia en el corte
+de escena**, por eso la música sigue el montaje. Son unas 17 notas en 44 s:
+calmo por construcción, como pide §9.
 
 - `MUS_LEVEL` controla cuánto entra en la mezcla (por defecto 0.115, que deja
   la música ~8 dB bajo el conjunto).
+- `MEL_LEVEL` controla sólo la melodía (0.16; era 0.30). La nota de piano
+  llevaba un chasquido de martillo de 12 ms entre 900 y 4200 Hz; ese
+  transitorio es lo que la hacía sonar como un "tin" de efecto, así que salió,
+  los parciales agudos bajaron, el ataque pasó a 45 ms y el filtro cierra en
+  1700 Hz. Medido sobre la mezcla normalizada, la melodía pasó de estar
+  8,4 dB bajo el acorde a 15,1 dB, y el brillo sobre 1800 Hz bajó 16 dB.
+- La primera nota de cada escena caía 1,0–1,6 s después del corte, encima de
+  la entrada del titular, y el oído la ataba al cambio de escena. Ahora entra
+  sobre los 2,5 s, ya instalada la escena.
+- **El cierre va sin melodía.** La escena 06 no tiene notas y la 05 cierra con
+  dos en vez de tres, así que la última entra en 37,1 s y ya está apagada
+  cuando aparece el lockup: ahí sólo queda el acorde resolviendo con su cola
+  de reverberación.
 - `musica.wav` se escribe aparte, por si se quiere rebalancear o reemplazar.
+- `efectos.wav` es el diseño sonoro **sin nada de música**, para montarlo bajo
+  otra pista. Es el bus `mix` tomado justo antes de sumarle la nuestra.
+
+#### Las dos variantes
+
+El equipo pidió comparar las dos lecturas de "sacar o bajar mucho", así que
+`audio.py` escribe las dos con el mismo pad, los mismos acordes y el mismo
+tratamiento de reverberación y ancho. Lo único que cambia es la melodía y si
+las transiciones están.
+
+| | `musica-sola.wav` | `musica-sonidos-bajos.wav` |
+|---|---|---|
+| Melodía | `MEL` con `pluck` (sin martillo, oscura) | `MEL_TIN` con `pluck_tin` (la original) |
+| Nivel de melodía | `MEL_LEVEL` = 0.16 | `MEL_TIN_LEVEL` = 0.30 × `BAJO` |
+| 1ª nota de cada escena | +2,5 s del corte | +1,0–1,6 s (como al principio) |
+| Nota en el cierre | no | sí, 9,5 dB bajo lo que era |
+| Soplo de transición | no | sí, `SOPLO_DB` bajo la música |
+
+`SOPLO_DB` (−15 dB) no se puede fijar por proporción con la mezcla de
+ambiente: ahí el soplo se apoyaba en la lluvia y el aire, y acá la música es
+lo único que suena. Heredar esa proporción lo dejaba 26 dB abajo, o sea
+inaudible. Por eso `ajustar()` calcula la ganancia midiendo el bus contra los
+acordes en las ventanas de los cortes. A −25 dB lo tapa el pad; a −8 vuelve a
+ser un efecto.
 
 Alternativas verificadas si se prefiere una pista grabada:
 

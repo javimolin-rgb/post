@@ -117,14 +117,24 @@ at(mix, ini(1)+3.75, thud(85, 40, .7, .22, .20), 0.20)    # queda lleno
 for t0 in (ini(5)+1.65, ini(5)+2.20, ini(5)+2.75):
     at(mix, t0, swipe(), 0.085)
 
-# 9 · transiciones de cámara
+# 9 · transiciones de cámara + 10 · cierre
+# Esto es lo que el equipo escuchó como "el efecto de cambio de slide". Va en
+# un bus aparte, no directo a la mezcla, porque las dos variantes que se
+# entregan lo usan con distinta ganancia (ver TRANS_* más abajo).
+trans = np.zeros(N)
 for (lo, hi, g), k in zip([(220,1700,.085),(160,1200,.075),(220,1700,.080),
                            (260,2000,.085),(200,1500,.080),(140,1000,.070)], range(1,7)):
-    t0 = ini(k) - 0.20
-    at(mix, t0, whoosh(.85, lo, hi), g)
+    at(trans, ini(k) - 0.20, whoosh(.85, lo, hi), g)
+at(trans, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055)   # la transición al lockup
 
-# 10 · cierre
-at(mix, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055)
+# Cuánto se bajan los dos sonidos que el equipo marcó —la transición de cada
+# cambio de escena y el acento del cierre— en la variante que los conserva.
+# 1.0 es como se escuchaban al principio; BAJO = 0.32 son 10 dB menos: se
+# oyen, pero no se adelantan a la imagen. 0.0 los saca del todo.
+BAJO = 0.32
+
+MUS_LEVEL = 0.115          # va bajo: acompaña, no compite
+mix += trans * BAJO
 
 # ---------------------------------------------------------------- música
 # Lecho instrumental propio: piano de fieltro sintetizado y pad cálido.
@@ -147,7 +157,27 @@ def pad(f, dur, atk=1.5, rel=2.8, seed=0):
     return band(y * e, None, 1250)
 
 def pluck(f, dur=3.4):
-    """Nota de piano de fieltro: parciales que decaen + golpe de martillo."""
+    """Nota de piano de fieltro: parciales que decaen, sin ataque brillante.
+
+    El golpe de martillo (un chasquido de 12 ms entre 900 y 4200 Hz) es lo que
+    hacía que cada nota se leyera como un "tin" de efecto y no como música.
+    Va fuera, los parciales agudos bajan, el ataque se suaviza a 45 ms y el
+    filtro cierra en 1700 Hz: queda el cuerpo de la nota, no su percusión.
+    """
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.zeros(n)
+    for k, amp, dec in ((1, 1.0, 2.8), (2, .28, 1.7), (3, .08, 1.0),
+                        (4, .030, .70), (6, .010, .45)):
+        y += amp * np.sin(2 * np.pi * f * k * t) * np.exp(-t / dec)
+    a = int(.045 * SR); y[:a] *= np.linspace(0, 1, a) ** 1.6
+    return band(y, None, 1700)
+
+def pluck_tin(f, dur=3.4):
+    """La nota tal como sonaba al principio: con el golpe de martillo.
+
+    Se conserva para la variante "con los sonidos, pero abajo": ahí lo que se
+    pidió fue bajarla de volumen, no cambiarle el timbre.
+    """
     n = int(dur * SR); t = np.arange(n) / SR
     y = np.zeros(n)
     for k, amp, dec in ((1, 1.0, 2.8), (2, .40, 1.7), (3, .17, 1.0),
@@ -157,7 +187,9 @@ def pluck(f, dur=3.4):
     a = int(.006 * SR); y[:a] *= np.linspace(0, 1, a)
     return band(y, None, 2700)
 
-mus = np.zeros(N)
+# El pad y los acordes son los mismos en las dos variantes, así que se
+# construyen una vez y después cada una le suma su melodía.
+padbus = np.zeros(N)
 # (inicio, acorde, bajo) — los inicios son los de las escenas
 ACORDES = [(['A3','C4','E4'],'A2'), (['F3','A3','C4'],'F2'), (['C4','E4','G4'],'C3'),
            (['D4','F4','A4'],'D3'), (['F3','A3','C4'],'F2'), (['A3','C4','E4'],'A2'),
@@ -166,34 +198,92 @@ CHORDS = [(ini(i), t, b) for i, (t, b) in enumerate(ACORDES)]
 for i, (t0, tones, bass) in enumerate(CHORDS):
     t1 = CHORDS[i + 1][0] if i + 1 < len(CHORDS) else DUR
     d = t1 - t0
-    at(mus, t0, pad(NOTE[bass], d, 1.8, 3.0, seed=i), 0.50)
+    at(padbus, t0, pad(NOTE[bass], d, 1.8, 3.0, seed=i), 0.50)
     for j, nm in enumerate(tones):
-        at(mus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
+        at(padbus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
 
-# dos o tres notas por escena, en tiempos relativos a cada una
-MEL_REL = [[(1.6,'E5'),(3.3,'C5'),(5.0,'A4')], [(1.2,'A4'),(3.4,'C5'),(5.4,'F4')],
-           [(1.3,'G4'),(3.3,'E5'),(5.3,'C5')], [(1.3,'D5'),(3.5,'A4'),(5.5,'F4')],
-           [(1.2,'C5'),(3.4,'A4'),(5.4,'F4')], [(1.3,'E5'),(3.3,'C5'),(5.0,'A4')],
-           [(1.0,'E5'),(2.8,'C5'),(4.2,'A4')]]
+# Dos o tres notas por escena, en tiempos relativos a cada una.
+#
+# La primera nota caía 1,0–1,6 s después del corte, justo cuando entra el
+# titular: el oído la ataba al cambio de escena y la escuchaba como el efecto
+# de sonido de una transición. Ahora entra sobre los 2,5 s, ya instalada la
+# escena, y la melodía se lee como melodía.
+#
+# El cierre (escena 6) va sin ninguna nota: era el "tin" que sonaba encima del
+# lockup. Ahí queda el acorde resolviendo con su cola de reverberación.
+MEL_REL = [[(2.6,'E5'),(4.2,'C5'),(5.6,'A4')], [(2.5,'A4'),(4.2,'C5'),(5.9,'F4')],
+           [(2.5,'G4'),(4.1,'E5'),(5.7,'C5')], [(2.5,'D5'),(4.2,'A4'),(5.8,'F4')],
+           [(2.5,'C5'),(4.2,'A4'),(5.8,'F4')], [(2.5,'E5'),(4.1,'C5')],
+           []]
+# La escena 05 cierra con dos notas, no tres: la tercera caía en 38,4 s y
+# seguía sonando sobre el lockup. Así la última nota de la pieza entra en
+# 37,1 s y ya está apagada cuando aparece el logo.
 MEL = [(ini(i)+dt, nm) for i, g in enumerate(MEL_REL) for dt, nm in g]
-for t0, nm in MEL:
-    at(mus, t0, pluck(NOTE[nm]), 0.30)
+MEL_LEVEL = 0.16          # era 0.30: la melodía acompaña al pad, no lo monta
 
-mp = np.max(np.abs(mus))
-if mp > 0: mus = mus / mp
-mus *= env([(0,0),(2.6,1),(DUR-2.6,1),(DUR,0)])
-MUS_LEVEL = 0.115          # va bajo: acompaña, no compite
+# La melodía como sonaba al principio: con el golpe de martillo, la primera
+# nota encima del corte y el acento sobre el lockup. Es la que se entrega en
+# la variante "con los sonidos, pero abajo", sólo con menos volumen.
+MEL_TIN_REL = [[(1.6,'E5'),(3.3,'C5'),(5.0,'A4')], [(1.2,'A4'),(3.4,'C5'),(5.4,'F4')],
+               [(1.3,'G4'),(3.3,'E5'),(5.3,'C5')], [(1.3,'D5'),(3.5,'A4'),(5.5,'F4')],
+               [(1.2,'C5'),(3.4,'A4'),(5.4,'F4')], [(1.3,'E5'),(3.3,'C5'),(5.0,'A4')],
+               [(1.0,'E5'),(2.8,'C5'),(4.2,'A4')]]
+MEL_TIN = [(ini(i)+dt, nm) for i, g in enumerate(MEL_TIN_REL) for dt, nm in g]
+MEL_TIN_LEVEL = 0.30 * BAJO     # mismo sonido que al principio, 10 dB abajo
+
+def melodia(notas, nota, nivel):
+    buf = np.zeros(N)
+    for t0, nm in notas:
+        at(buf, t0, nota(NOTE[nm]), nivel)
+    return buf
+
+def masterizar(x):
+    """Normaliza al pico y aplica el fundido de entrada y salida."""
+    mp = np.max(np.abs(x))
+    if mp > 0: x = x / mp
+    return x * env([(0,0),(2.6,1),(DUR-2.6,1),(DUR,0)])
+
+# Variante A — la que se publica: melodía calma, sin transiciones.
+mus = masterizar(padbus + melodia(MEL, pluck, MEL_LEVEL))
+
+# El soplo de transición sólo existía en la mezcla con ambiente, donde se
+# apoyaba en la lluvia y el aire. Acá no hay nada de eso debajo: la música es
+# lo único que suena, así que su nivel se fija contra los acordes y no
+# heredando la proporción de la otra mezcla, que lo dejaba 26 dB abajo y
+# simplemente no se oía.
+SOPLO_DB = -15.0           # a −25 lo tapa el pad; a −8 vuelve a ser un efecto
+
+def ajustar(bus, ref, db_obj, ventanas):
+    """Ganancia para que `bus` quede `db_obj` bajo `ref` en esas ventanas."""
+    b = np.concatenate([bus[a:z] for a, z in ventanas])
+    r = np.concatenate([ref[a:z] for a, z in ventanas])
+    rb = np.sqrt((b ** 2).mean()); rr = np.sqrt((r ** 2).mean())
+    return (rr / rb) * 10 ** (db_obj / 20) if rb > 0 else 0.0
+
+VENTANAS = [(int((ini(k)-0.20) * SR), int((ini(k)+0.65) * SR)) for k in range(1, 7)]
+TRANS_MUS = ajustar(trans, padbus, SOPLO_DB, VENTANAS)
+
+# Variante B — "con los sonidos, pero abajo": la melodía original con su
+# golpe de martillo 10 dB más abajo, y el soplo en cada cambio de escena.
+mus_tin = masterizar(padbus + melodia(MEL_TIN, pluck_tin, MEL_TIN_LEVEL)
+                     + trans * TRANS_MUS)
+
+# El diseño sonoro sin nada de música, para poder montarlo bajo otra pista.
+# Se toma acá, justo antes de sumarle la nuestra.
+efectos = mix.copy()
 mix += mus * MUS_LEVEL
 
 # ---------------------------------------------------------------- estéreo
 # la lluvia y el aire se abren; los golpes quedan al centro
 wide  = band(noise(), 600, 7000) * env([(0,0),(ini(2)+4.6,.25),(ini(3)+1.2,.6),(fin(3)-0.6,.6),(ini(4)+1.4,0),(DUR,0)]) * 0.030
-L = mix + wide
-R = mix - wide
-st = np.stack([L, R], axis=1)
 
-peak = np.max(np.abs(st))
-if peak > 0: st = st / peak * 0.72
+def ensanchar(bus, tope=0.72):
+    y = np.stack([bus + wide, bus - wide], axis=1)
+    pk = np.max(np.abs(y))
+    return y / pk * tope if pk > 0 else y
+
+st  = ensanchar(mix)
+efx = ensanchar(efectos)
 
 def write_wav(path, data):
     d = np.clip(data, -1, 1)
@@ -206,6 +296,7 @@ def write_wav(path, data):
 OUT = HERE.parent / 'out'
 OUT.mkdir(exist_ok=True)
 write_wav(HERE / 'sfx.wav', st)
+write_wav(HERE / 'efectos.wav', efx)      # el diseño sonoro solo, sin música
 write_wav(HERE / 'musica.wav', np.stack([mus, mus], axis=1))   # para ajustar el balance aparte
 
 # --- versión en que la música es lo ÚNICO que suena --------------------------
@@ -222,12 +313,16 @@ def reverb(x, dur=2.6, pre=0.035, damp=3400, seed=0):
     return np.fft.irfft(np.fft.rfft(x, M) * np.fft.rfft(ir, M), M)[:len(x)]
 
 WET = 0.30
-solaL = mus * (1 - WET) + reverb(mus, seed=1) * WET
-solaR = mus * (1 - WET) + reverb(mus, seed=2) * WET
-sola = np.stack([solaL, solaR], axis=1)
-sp = np.max(np.abs(sola))
-if sp > 0: sola = sola / sp * 0.90
-write_wav(HERE / 'musica-sola.wav', sola)
+def a_estereo(x):
+    y = np.stack([x * (1 - WET) + reverb(x, seed=1) * WET,
+                  x * (1 - WET) + reverb(x, seed=2) * WET], axis=1)
+    sp = np.max(np.abs(y))
+    return y / sp * 0.90 if sp > 0 else y
+
+# Las dos variantes reciben el mismo tratamiento, así se comparan de verdad:
+# lo único que cambia entre los archivos es si los sonidos están o no.
+write_wav(HERE / 'musica-sola.wav', a_estereo(mus))
+write_wav(HERE / 'musica-sonidos-bajos.wav', a_estereo(mus_tin))
 
 # ---------------------------------------------------------------- voz (maqueta)
 # ---------------------------------------------------------------- voz
@@ -407,3 +502,164 @@ if '--voice' in sys.argv:
     html.write_text(src[:k0] + '/* SUBS:INICIO */\nlet SUBS=[\n  ' + rows + '\n];\n' + src[k1:],
                     encoding='utf-8')
     print('  subtitulos escritos en pilotes-reel.html')
+
+# ============================================================================
+# Música "arpegio" — réplica en código de la pista que mandó el equipo
+# ============================================================================
+# Su export de música traía los efectos mezclados dentro y no se podían
+# cancelar (ver README), así que en vez de limpiarla se reconstruye desde cero.
+# Lo que se midió sobre el archivo de ellos, y que esto reproduce:
+#
+#   · La mayor. Progresión Fa#m – Re – La – Mi, cinco vueltas.
+#   · 125 BPM, 4/4, un acorde por compás = 1,92 s. (La autocorrelación marca
+#     62 BPM, que es el mismo pulso sentido a la mitad.)
+#   · Pedal de sub en Fa#1 (46,25 Hz): entre 40 y 70 Hz la pista tiene −20,7 dB
+#     y ahí se ve un pico sostenido. Lo de debajo de 40 Hz no es música, es el
+#     stem de efectos (−42,7 dB cuando los efectos callan, −25,4 cuando suenan).
+#   · Bajo en la fundamental del acorde: Fa#2, Re3, La2, Mi3.
+#   · Arpegio de corcheas (0,24 s) con Mi4 de pedal en los tiempos 2 y 6. Mi es
+#     nota común de La y Mi, y sobre Re y Fa#m queda como novena: por eso
+#     sostiene la vuelta entera sin pelearse con ningún acorde.
+#   · Oscura: sobre 1500 Hz la pista tiene apenas el 2,6 % de la energía, así
+#     que nada de brillo (y ya sabemos cómo suena un agudo de más acá).
+#   · Baja ~2,5 dB entre los compases 15 y 18, y cierra con un fundido desde
+#     los 40,3 s.
+
+BPM     = 125.0
+COMPAS  = 4 * 60.0 / BPM            # 1,92 s
+CORCHEA = COMPAS / 8                # 0,24 s
+
+def hz(n):
+    """'F#1', 'Eb3', 'A4' -> frecuencia en Hz."""
+    base = {'C':0,'D':2,'E':4,'F':5,'G':7,'A':9,'B':11}
+    v = base[n[0]]; i = 1
+    while n[i] in '#b':
+        v += 1 if n[i] == '#' else -1; i += 1
+    return 440.0 * 2 ** ((v + 12 * (int(n[i:]) - 4) - 9) / 12)
+
+# acorde -> (bajo, tríada del pad, aguda, media, grave del arpegio)
+# El arpegio entero vive entre Re4 y Mi5 (293–659 Hz). La primera versión lo
+# llevaba hasta La5 y Sol#5, y eso inflaba la banda de 700–1500 Hz al 20 %
+# cuando en el original pesa 4,7 %. Lo que se oía como nota aguda ahí arriba
+# son armónicos, no notas.
+# Las cuatro fundamentales del bajo quedan dentro de 60–140 Hz (Fa#2 92,5 ·
+# Re2 73,4 · La2 110 · Mi2 82,4). Con Re3 y Mi3, como se leían en el análisis,
+# el bajo se iba a la banda de 140–300 Hz y la dejaba 6 puntos por encima del
+# original mientras 60–140 quedaba corta. Los picos en Re3 y Mi3 del archivo
+# de ellos son el segundo armónico, que acá sale solo.
+ARM = {'F#m': ('F#2', ['F#3','A3','C#4'], 'C#5', 'A4',  'F#4'),
+       'D':   ('D2',  ['D3','F#3','A3' ], 'A4',  'F#4', 'D4' ),
+       'A':   ('A2',  ['A3','C#4','E4' ], 'E5',  'C#5', 'A4' ),
+       'E':   ('E2',  ['E3','G#3','B3' ], 'B4',  'G#4', 'B4' )}
+# El grave del acorde de Mi es Si4 y no Mi4: con Mi4 ahí, sumado al pedal y a
+# la tríada de La, Mi se llevaba el 13,6 % del chroma contra el 8,8 % del
+# original, y Si quedaba corta. La fundamental del acorde ya la pone el bajo.
+PEDAL  = 'E4'
+PATRON = ['aguda','pedal','media','media','aguda','pedal','grave','grave']
+# Nivel de cada corchea dentro del compás. No son todas iguales a propósito:
+#  · Las posiciones 1 y 5 llevan acento. Son las que están a 0,96 s una de
+#    otra, y de ahí sale el pulso de 62 BPM que marca la autocorrelación del
+#    original (125 BPM es el mismo pulso contado al doble). Sin el acento la
+#    réplica sonaba plana y el detector de tempo se perdía.
+#  · El pedal va bajo. A nivel parejo, Mi se llevaba el 16,7 % del chroma
+#    cuando en el original pesa 9,7 %.
+# El medio (250–800 Hz) del original tiene su periodicidad más fuerte en
+# 0,48 s, no en 0,24: las corcheas están todas, pero una de cada dos lleva
+# acento. Esa alternancia es lo que se copia acá.
+NIVEL  = [0.70, 0.15, 0.56, 0.15, 0.66, 0.15, 0.56, 0.15]
+
+CICLO   = ['F#m','D','A','E']
+BARRAS  = [(i * COMPAS, CICLO[i % 4], COMPAS) for i in range(20)]   # 0 → 38,40
+BARRAS += [(20 * COMPAS, 'F#m', 1.20), (39.60, 'A', DUR - 39.60)]   # el cierre
+
+# El sub y el bajo NO son un pedal sostenido, aunque al oírlos lo parezcan:
+# en el archivo de ellos la envolvente de 35–70 Hz y la de 70–140 Hz tienen su
+# periodicidad más fuerte en 0,97 s, con 16,5 y 21,4 dB de variación de nivel.
+# O sea, pulsan cada media compás. De ahí sale el pulso de 62 BPM que marca la
+# autocorrelación, y no del arpegio: modelado como drone, la réplica daba 0,31
+# de fuerza de pulso contra 0,90 del original.
+PULSO = COMPAS / 2                  # 0,96 s
+
+def golpe_sub(f, dur=1.5, tau=0.33):
+    """Pulso de sub: seno que entra y cae. Es el latido de la pieza."""
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * f * t) * np.exp(-t / tau)
+    y += 0.18 * np.sin(2 * np.pi * 2 * f * t) * np.exp(-t / (tau * 0.5))
+    a = int(.040 * SR); y[:a] *= np.linspace(0, 1, a) ** 1.2
+    return band(y, None, 160)
+
+def golpe_bajo(f, dur=1.5, tau=0.25):
+    """Pulso de la fundamental del acorde, sobre la misma rejilla."""
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * f * t) * np.exp(-t / tau)
+    y += 0.16 * np.sin(2 * np.pi * 2 * f * t) * np.exp(-t / (tau * 0.5))
+    y += 0.04 * np.sin(2 * np.pi * 3 * f * t) * np.exp(-t / (tau * 0.3))
+    a = int(.030 * SR); y[:a] *= np.linspace(0, 1, a) ** 1.2
+    # Cierra en 300 Hz: más arriba el bajo se mete en 140–300 Hz, que es la
+    # banda del pad, y en el ajuste de niveles el pad se iba a cero.
+    return band(y, None, 300)
+
+def arpegio(f, dur=1.5):
+    """Nota del arpegio: ataque de 25 ms, filtro en 2800 Hz.
+
+    El original tiene 2,5 % de su energía sobre 1500 Hz: poco, pero no cero.
+    Cerrar en 1600 lo dejaba completamente mate, así que el filtro abre hasta
+    ahí y los armónicos 5 y 6 entran muy bajos.
+    """
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.zeros(n)
+    for k, amp, dec in ((1, 1.0, 1.05), (2, .40, .60), (3, .20, .36),
+                        (4, .10, .22), (5, .048, .16), (6, .024, .12)):
+        y += amp * np.sin(2 * np.pi * f * k * t) * np.exp(-t / dec)
+    a = int(.025 * SR); y[:a] *= np.linspace(0, 1, a) ** 1.4
+    return band(y, None, 2800)
+
+arp_bus = np.zeros(N); pad_bus2 = np.zeros(N); baj_bus = np.zeros(N)
+for t0, nm, d in BARRAS:
+    raiz, triada, aguda, media, grave = ARM[nm]
+    k = 0
+    while k * PULSO < d - 0.05:
+        at(baj_bus, t0 + k * PULSO, golpe_bajo(hz(raiz)), 0.60 if k == 0 else 0.48)
+        k += 1
+    for j, tono in enumerate(triada):
+        at(pad_bus2, t0 + j * .06, pad(hz(tono), d, 1.1, 2.2, seed=int(t0 * 7) + j), 0.26)
+    k = 0
+    while k * CORCHEA < d - 0.05:
+        papel = PATRON[k % 8]
+        nota = PEDAL if papel == 'pedal' else {'aguda': aguda, 'media': media,
+                                               'grave': grave}[papel]
+        at(arp_bus, t0 + k * CORCHEA, arpegio(hz(nota)), NIVEL[k % 8])
+        k += 1
+
+# Un velo de aire muy tenue. El original tiene 2,1 % de su energía sobre
+# 1500 Hz; sin esto la réplica queda en 0,1 % y suena tapada, como si le
+# faltara la sala. No es un efecto ni un brillo: es ruido filtrado, sin
+# transitorios, moviéndose despacio.
+aire_bus = band(noise(), 1100, 4200) * (0.75 + 0.25 * lfo(0.07, 0.8)) \
+           * env([(0,0),(2.5,1),(40.3,1),(DUR,0)])
+
+# El sub late en Fa#1 sobre la misma rejilla de medio compás, sin seguir los
+# acordes: en el archivo de ellos el pico de 35–70 Hz se queda en 44–48 Hz
+# toda la pieza, cambie el acorde que cambie. En el cierre pasa a La1.
+sub_bus = np.zeros(N)
+t = 0.0
+while t < DUR - 0.2:
+    f0 = hz('F#1') if t < 39.6 else hz('A1')
+    at(sub_bus, t, golpe_sub(f0), 1.0 if (t / PULSO) % 2 < 1 else 0.82)
+    t += PULSO
+
+# Los niveles no están puestos a oído: salen de resolver, con mínimos
+# cuadrados no negativos ponderados por la energía de cada banda, qué mezcla
+# de las cinco capas reproduce el reparto espectral del archivo de ellos
+# (medido sólo donde su stem de efectos calla, para no contar lo que no es
+# música). Las siete bandas quedan dentro de 2,5 puntos porcentuales.
+GAN = dict(sub=0.616, bajo=1.000, pad=0.298, arp=0.298, aire=0.183)
+arpg = masterizar(sub_bus * GAN['sub'] + baj_bus * GAN['bajo']
+                  + pad_bus2 * GAN['pad'] + arp_bus * GAN['arp']
+                  + aire_bus * GAN['aire'])
+# baja un poco en el tramo suave y cierra con el fundido que trae el original
+# El original baja 4 dB entre los compases 15 y 18; con 0,76 la réplica sólo
+# bajaba 1,5 dB. El pico del compás 1 NO se replica: ese +10 dB del archivo de
+# ellos es el golpe del stem de efectos en 0,02 s, no la música.
+arpg *= env([(0,1),(26.9,1),(28.0,.62),(34.0,.62),(35.5,1),(40.3,1),(DUR,0)])
+write_wav(HERE / 'musica-arpegio.wav', a_estereo(arpg))
