@@ -58,6 +58,13 @@ Sobre el corte que mandó el equipo, con su música:
 | `interino-musica-nuestra-sin-efectos-1080x1920.mp4` | **Provisorio.** El video nuevo con nuestro lecho musical, sin ningún efecto. |
 | `musica-codigo-sin-efectos-1080x1920.mp4` | La música del equipo **rehecha en código**, limpia. Sin efectos. |
 | `musica-codigo-con-efectos-1080x1920.mp4` | Esa misma, + el stem de efectos del equipo 18 dB por debajo. |
+| `musica-nueva-efectos-50-1080x1920.mp4` | El preview de música nueva + los efectos **al 50 %** de como venían en su mezcla. |
+
+> El preview de música nueva (`..._preview_musica_nueva.mp4`) **sí viene
+> limpio**: correlaciona ~0 con el stem de efectos en todos sus eventos, al
+> revés que el export anterior. Por eso ahí los efectos sí se pueden dosificar.
+> El 100 % está definido por su propia mezcla, donde los efectos entraban a
+> ×0,666 del stem suelto; el 50 % es ×0,333, o sea 6 dB menos.
 
 > **Ojo con los textos.** El video que mandó el equipo es **la versión
 > vigente** y trae **los seis bloques de texto reescritos** respecto de
