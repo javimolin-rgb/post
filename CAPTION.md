@@ -56,6 +56,8 @@ Sobre el corte que mandó el equipo, con su música:
 | `musica-v1-sin-efectos-1080x1920.mp4` | La pista del equipo tal cual — **trae sus efectos dentro**, ver abajo. |
 | `musica-v1-con-efectos-1080x1920.mp4` | Esa misma pista + nuestro diseño sonoro (lluvia, agua, pilotes, vaciado, aire y transiciones), 12 dB por debajo. |
 | `interino-musica-nuestra-sin-efectos-1080x1920.mp4` | **Provisorio.** El video nuevo con nuestro lecho musical, sin ningún efecto. |
+| `musica-codigo-sin-efectos-1080x1920.mp4` | La música del equipo **rehecha en código**, limpia. Sin efectos. |
+| `musica-codigo-con-efectos-1080x1920.mp4` | Esa misma, + el stem de efectos del equipo 18 dB por debajo. |
 
 > **Ojo con los textos.** El video que mandó el equipo es **la versión
 > vigente** y trae **los seis bloques de texto reescritos** respecto de

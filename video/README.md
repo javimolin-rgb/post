@@ -78,6 +78,51 @@ ffmpeg -y -i ../out/neorigen-pilotes-reel-1080x1920.mp4 -i musica-sola.wav \
 Para comprobar el nivel: `ffmpeg -i <mp4> -af ebur128=peak=true -f null -`.
 El manual pide ~−14 LUFS y pico ≤ −1 dBTP (§9).
 
+### `musica-arpegio.wav` — réplica en código de la pista del equipo
+
+El export de música del equipo traía los efectos mezclados dentro y no se
+podían cancelar, así que en vez de limpiarla se reconstruyó desde cero. Todo
+lo que define la pieza se midió sobre su archivo, **descontando los tramos
+donde su stem de efectos suena**, para no analizar lo que no es música:
+
+| | Medido en el original | En la réplica |
+|---|---|---|
+| Tonalidad | La mayor | La mayor |
+| Progresión | Fa#m – Re – La – Mi, cinco vueltas | igual |
+| Compás | 1,92 s (125 BPM, 4/4) | igual |
+| Pulso del sub y el bajo | **0,97 s**, swing 16,5 y 21,4 dB | 0,96 s, swing 15,7 y 19,2 dB |
+| Arpegio | corcheas, acento cada 0,48 s | igual |
+| Sub | pedal en Fa#1, no sigue los acordes | igual |
+| Bajo | fundamental del acorde | Fa#2 · Re2 · La2 · Mi2 |
+
+Dos cosas que no se ven a simple vista y cambiaron el resultado:
+
+- **El sub y el bajo no son un drone, pulsan.** Las envolventes de 35–70 Hz y
+  70–140 Hz tienen su periodicidad más fuerte en 0,97 s con 16 y 21 dB de
+  variación. Modelados como pedal sostenido, la réplica daba 0,31 de fuerza de
+  pulso contra 0,90 del original. Como pulso, el tempo detectado pasó de
+  67,75 BPM a 62,50 contra los 62,25 del original.
+- **Lo de debajo de 40 Hz no es música.** Ahí el original tiene −42,7 dB
+  cuando los efectos callan y −25,4 cuando suenan: es el stem de efectos. Y el
+  pico de +10 dB del primer compás es su golpe de 0,02 s, no la entrada de la
+  música. Ninguno de los dos se replica.
+
+Los niveles de las cinco capas (`GAN`) no están puestos a oído: salen de
+resolver con mínimos cuadrados no negativos, ponderados por la energía de cada
+banda, qué mezcla reproduce el reparto espectral del original.
+
+Resultado medido contra el original:
+
+| | |
+|---|---|
+| Correlación de chroma | **0,972** (ninguna nota se desvía más de 2,8 puntos) |
+| Tempo | 62,50 BPM contra 62,25 |
+| Reparto espectral | las siete bandas dentro de 5,6 puntos |
+
+Para mover algo: `ARM` tiene las notas de cada acorde, `NIVEL` el acento de
+cada corchea del compás, `GAN` el balance entre capas y `BARRAS` la
+estructura.
+
 ### Montar una pista de música de afuera
 
 El diseño sonoro se mezcla aparte con `efectos.wav` y se monta sobre el video
