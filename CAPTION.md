@@ -5,23 +5,25 @@ explica sola.
 
 ## Caption
 
-La casa empieza bajo tierra.
+Versión vigente, la que mandó el equipo (`Descripcion_Reel_Pilotes.txt`):
+
+Tu casa empieza bajo tierra.
 
 Antes de la primera tabla hay una decisión que después ya no se ve: sobre qué
-se para la casa.
+se apoya la casa.
 
-Fundamos sobre pilotes de PVC rellenos de hormigón armado. Cada uno baja hasta
-el suelo firme, así que la casa queda a nivel sin mover tierra. El agua de
-lluvia pasa por debajo en vez de empozarse, y entre el suelo y el piso queda
-una cámara de aire que mantiene la casa seca.
+En Neorigen construimos sobre pilotes de hormigón armado, cada uno confinado
+en un tubo de PVC. Bajan hasta el suelo firme, así la casa se nivela en
+terrenos con pendiente sin grandes movimientos de tierra.
 
-El PVC no se degrada, no se oxida y a las termitas no les interesa. Se instala
-una vez, y listo.
+Bajo el piso queda aire que circula. El agua de lluvia pasa por debajo, la
+estructura se mantiene lejos de la humedad y llega menos frío al piso.
 
-¿Vas a construir? Conversemos.
+Menor intervención, más durabilidad.
 
-#Neorigen #ViveLoNatural #CasasPrediseñadas #CasasDeMadera
-#ConstrucciónSustentable #Fundaciones #Pilotes #Chile
+¿Conversamos sobre tu proyecto? Cotiza en neorigen.cl
+
+#Neorigen #ViveLoNatural #CasasPrediseñadas #ConstrucciónSustentable #Pilotes
 
 ## Versión corta (historia)
 
@@ -51,8 +53,9 @@ Sobre el corte que mandó el equipo, con su música:
 
 | Archivo | Qué suena |
 |---|---|
-| `musica-v1-sin-efectos-1080x1920.mp4` | Solo la música. |
-| `musica-v1-con-efectos-1080x1920.mp4` | La música + el diseño sonoro (lluvia, agua, pilotes, vaciado, aire y las transiciones), 12 dB por debajo. |
+| `musica-v1-sin-efectos-1080x1920.mp4` | La pista del equipo tal cual — **trae sus efectos dentro**, ver abajo. |
+| `musica-v1-con-efectos-1080x1920.mp4` | Esa misma pista + nuestro diseño sonoro (lluvia, agua, pilotes, vaciado, aire y transiciones), 12 dB por debajo. |
+| `interino-musica-nuestra-sin-efectos-1080x1920.mp4` | **Provisorio.** El video nuevo con nuestro lecho musical, sin ningún efecto. |
 
 > **Ojo con los textos.** El video que mandó el equipo es **la versión
 > vigente** y trae **los seis bloques de texto reescritos** respecto de
@@ -61,6 +64,18 @@ Sobre el corte que mandó el equipo, con su música:
 > la copy buena — pero **el HTML del repo todavía tiene la vieja**, así que
 > cualquier re-render la haría retroceder. Hay que pasar los textos nuevos al
 > HTML antes de volver a tocar la animación.
+
+> **El export de música del equipo no está limpio.** `..._musica.mp4` trae los
+> efectos de sonido mezclados dentro: las formas de onda correlacionan 0,5–0,96
+> a desfase cero contra `..._solo-efectos.mp4`, y los golpes caen justo en los
+> seis cortes de escena. No se pueden sacar después: una resta con la ganancia
+> óptima (k ≈ 0,666 en los dos canales) y un filtro de Wiener por banda bajan
+> los transitorios sólo 0,1–4,2 dB, porque los efectos pasaron por la
+> compresión del máster y ya no son cancelables. **Hace falta un export del bus
+> de música solo**, igual que se exportó el de efectos solo.
+>
+> Mientras tanto, `interino-musica-nuestra-sin-efectos-1080x1920.mp4` monta
+> nuestro lecho musical —que sí está limpio— sobre el video nuevo.
 
 Las dos opciones tienen **el mismo video** y el **mismo nivel** (−13,6 LUFS):
 lo único que cambia es si los sonidos están o no, así que se comparan parejo.
