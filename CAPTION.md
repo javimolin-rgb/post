@@ -49,7 +49,18 @@ resuelve la fundación en ese caso.
 - **Música propia.** Piano de fieltro y pad cálido sintetizados en
   `video/audio.py`, con los acordes cambiando en cada corte de escena. Es
   material nuestro: sin licencia que respetar ni atribución que poner. Queda
-  a −13,7 LUFS y −3,4 dBTP, dentro de lo que pide §9.
+  a −13,6 LUFS y −3,3 dBTP, dentro de lo que pide §9.
+- **Sin efectos en los cambios de escena y sin nota al final** (pedido del
+  equipo). Tres cosas cambiaron:
+  1. Los soplos de transición de cámara están apagados.
+  2. La nota de piano perdió el chasquido de martillo que la hacía sonar como
+     un "tin". Suena más oscura (−16 dB de brillo sobre 1800 Hz) y queda casi
+     7 dB más abajo respecto del acorde.
+  3. La primera nota de cada escena ya no cae encima del corte, sino un
+     segundo más tarde, y el cierre no lleva ninguna nota: sobre el lockup
+     sólo queda el acorde apagándose.
+
+  El resto de la música es el mismo. El nivel general no cambió.
 - **Sin voz ni subtítulos**, por decisión del equipo. El guion locutado y el
   script para generarlo con Azure siguen en el repo (`video/voz-azure.py` y
   el historial de este archivo) por si se retoma.

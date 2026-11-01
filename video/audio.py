@@ -118,13 +118,17 @@ for t0 in (ini(5)+1.65, ini(5)+2.20, ini(5)+2.75):
     at(mix, t0, swipe(), 0.085)
 
 # 9 · transiciones de cámara
+# Sonaban como el "efecto de cambio de slide" de una presentación, así que van
+# apagadas: TRANS=0 las saca sin borrar el diseño. Con 0.12 vuelven como un
+# soplo apenas perceptible; sobre 0.5 vuelven a ser un efecto y se notan.
+TRANS = 0.0
 for (lo, hi, g), k in zip([(220,1700,.085),(160,1200,.075),(220,1700,.080),
                            (260,2000,.085),(200,1500,.080),(140,1000,.070)], range(1,7)):
     t0 = ini(k) - 0.20
-    at(mix, t0, whoosh(.85, lo, hi), g)
+    at(mix, t0, whoosh(.85, lo, hi), g * TRANS)
 
-# 10 · cierre
-at(mix, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055)
+# 10 · cierre: mismo criterio, es la transición al lockup
+at(mix, ini(6)-0.6, whoosh(2.4, 60, 420), 0.055 * TRANS)
 
 # ---------------------------------------------------------------- música
 # Lecho instrumental propio: piano de fieltro sintetizado y pad cálido.
@@ -147,15 +151,20 @@ def pad(f, dur, atk=1.5, rel=2.8, seed=0):
     return band(y * e, None, 1250)
 
 def pluck(f, dur=3.4):
-    """Nota de piano de fieltro: parciales que decaen + golpe de martillo."""
+    """Nota de piano de fieltro: parciales que decaen, sin ataque brillante.
+
+    El golpe de martillo (un chasquido de 12 ms entre 900 y 4200 Hz) es lo que
+    hacía que cada nota se leyera como un "tin" de efecto y no como música.
+    Va fuera, los parciales agudos bajan, el ataque se suaviza a 45 ms y el
+    filtro cierra en 1700 Hz: queda el cuerpo de la nota, no su percusión.
+    """
     n = int(dur * SR); t = np.arange(n) / SR
     y = np.zeros(n)
-    for k, amp, dec in ((1, 1.0, 2.8), (2, .40, 1.7), (3, .17, 1.0),
-                        (4, .085, .70), (6, .035, .45)):
+    for k, amp, dec in ((1, 1.0, 2.8), (2, .28, 1.7), (3, .08, 1.0),
+                        (4, .030, .70), (6, .010, .45)):
         y += amp * np.sin(2 * np.pi * f * k * t) * np.exp(-t / dec)
-    y += band(noise(n), 900, 4200) * np.exp(-t / .012) * .16
-    a = int(.006 * SR); y[:a] *= np.linspace(0, 1, a)
-    return band(y, None, 2700)
+    a = int(.045 * SR); y[:a] *= np.linspace(0, 1, a) ** 1.6
+    return band(y, None, 1700)
 
 mus = np.zeros(N)
 # (inicio, acorde, bajo) — los inicios son los de las escenas
@@ -170,14 +179,26 @@ for i, (t0, tones, bass) in enumerate(CHORDS):
     for j, nm in enumerate(tones):
         at(mus, t0 + j * .10, pad(NOTE[nm], d, 1.6, 2.8, seed=i * 7 + j), 0.34)
 
-# dos o tres notas por escena, en tiempos relativos a cada una
-MEL_REL = [[(1.6,'E5'),(3.3,'C5'),(5.0,'A4')], [(1.2,'A4'),(3.4,'C5'),(5.4,'F4')],
-           [(1.3,'G4'),(3.3,'E5'),(5.3,'C5')], [(1.3,'D5'),(3.5,'A4'),(5.5,'F4')],
-           [(1.2,'C5'),(3.4,'A4'),(5.4,'F4')], [(1.3,'E5'),(3.3,'C5'),(5.0,'A4')],
-           [(1.0,'E5'),(2.8,'C5'),(4.2,'A4')]]
+# Dos o tres notas por escena, en tiempos relativos a cada una.
+#
+# La primera nota caía 1,0–1,6 s después del corte, justo cuando entra el
+# titular: el oído la ataba al cambio de escena y la escuchaba como el efecto
+# de sonido de una transición. Ahora entra sobre los 2,5 s, ya instalada la
+# escena, y la melodía se lee como melodía.
+#
+# El cierre (escena 6) va sin ninguna nota: era el "tin" que sonaba encima del
+# lockup. Ahí queda el acorde resolviendo con su cola de reverberación.
+MEL_REL = [[(2.6,'E5'),(4.2,'C5'),(5.6,'A4')], [(2.5,'A4'),(4.2,'C5'),(5.9,'F4')],
+           [(2.5,'G4'),(4.1,'E5'),(5.7,'C5')], [(2.5,'D5'),(4.2,'A4'),(5.8,'F4')],
+           [(2.5,'C5'),(4.2,'A4'),(5.8,'F4')], [(2.5,'E5'),(4.1,'C5')],
+           []]
+# La escena 05 cierra con dos notas, no tres: la tercera caía en 38,4 s y
+# seguía sonando sobre el lockup. Así la última nota de la pieza entra en
+# 37,1 s y ya está apagada cuando aparece el logo.
 MEL = [(ini(i)+dt, nm) for i, g in enumerate(MEL_REL) for dt, nm in g]
+MEL_LEVEL = 0.16          # era 0.30: la melodía acompaña al pad, no lo monta
 for t0, nm in MEL:
-    at(mus, t0, pluck(NOTE[nm]), 0.30)
+    at(mus, t0, pluck(NOTE[nm]), MEL_LEVEL)
 
 mp = np.max(np.abs(mus))
 if mp > 0: mus = mus / mp

@@ -31,23 +31,46 @@ Sigue `../docs/MANUAL_MARCA_VIDEO.md`.
 
 ## Re-generar
 
+El reel que se publica va **sin subtítulos y con `musica-sola.wav`** como única
+pista; `sfx.wav` es la alternativa con ambiente.
+
 ```bash
 cd video
-node render.js --fps 30 --out frames
+python3 audio.py                      # musica-sola.wav y sfx.wav
+node render.js --fps 30 --nosubs --out frames
 
-ffmpeg -y -framerate 30 -i frames/f%05d.jpg \
-  -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 -shortest \
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sola.wav -shortest \
+  -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
   -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
   -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
   ../out/neorigen-pilotes-reel-1080x1920.mp4
 
-ffmpeg -y -framerate 30 -i frames/f%05d.jpg \
-  -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 \
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i musica-sola.wav \
   -vf "crop=1080:1350:0:198" -shortest \
+  -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
   -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
   -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
   ../out/neorigen-pilotes-feed-1080x1350.mp4
+
+ffmpeg -y -framerate 30 -i frames/f%05d.jpg -i sfx.wav -shortest \
+  -af "loudnorm=I=-16.5:TP=-1.5:LRA=11" \
+  -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
+  ../out/alternativa-musica-y-ambiente-1080x1920.mp4
 ```
+
+**Si sólo cambia el audio** no hace falta volver a renderizar los fotogramas:
+se cambia la pista y la imagen se copia tal cual, sin recomprimir.
+
+```bash
+ffmpeg -y -i ../out/neorigen-pilotes-reel-1080x1920.mp4 -i musica-sola.wav \
+  -map 0:v:0 -map 1:a:0 -c:v copy -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
+  -c:a aac -b:a 192k -ar 48000 -ac 2 -shortest -movflags +faststart \
+  /tmp/reel.mp4 && mv /tmp/reel.mp4 ../out/neorigen-pilotes-reel-1080x1920.mp4
+```
+
+Para comprobar el nivel: `ffmpeg -i <mp4> -af ebur128=peak=true -f null -`.
+El manual pide ~−14 LUFS y pico ≤ −1 dBTP (§9).
 
 Fotogramas sueltos para revisar sin renderizar todo:
 
@@ -106,19 +129,36 @@ python3 audio.py --voice    # ademas voz.wav y mezcla-voz.wav (maqueta)
 
 Las capas siguen a la animación: el peso de la tierra, el aire, la lluvia que
 entra en la escena 02 y crece en la 03, el agua que escurre, el golpe de cada
-pilote al colocarse, el vaciado del hormigón, los tres descartes de la escena
-05 y un soplo suave en cada transición de cámara.
+pilote al colocarse, el vaciado del hormigón y los tres descartes de la
+escena 05.
+
+Los soplos de transición de cámara están **apagados** (`TRANS = 0.0`): se
+leían como el efecto de sonido de un cambio de slide. Con `TRANS = 0.12`
+vuelven como un aire apenas perceptible; sobre 0.5 vuelven a ser un efecto.
 
 ### Música
 
 El lecho musical también se sintetiza en `audio.py`: piano de fieltro
-(parciales que decaen + golpe de martillo) sobre un pad cálido. La progresión
-es Am – F – C – Dm – F – Am – C y **cada acorde cambia en el corte de escena**,
-por eso la música sigue el montaje. Son unas 20 notas en 43 s: calmo por
-construcción, como pide §9.
+(parciales que decaen, sin golpe de martillo) sobre un pad cálido. La
+progresión es Am – F – C – Dm – F – Am – C y **cada acorde cambia en el corte
+de escena**, por eso la música sigue el montaje. Son unas 17 notas en 44 s:
+calmo por construcción, como pide §9.
 
 - `MUS_LEVEL` controla cuánto entra en la mezcla (por defecto 0.115, que deja
   la música ~8 dB bajo el conjunto).
+- `MEL_LEVEL` controla sólo la melodía (0.16; era 0.30). La nota de piano
+  llevaba un chasquido de martillo de 12 ms entre 900 y 4200 Hz; ese
+  transitorio es lo que la hacía sonar como un "tin" de efecto, así que salió,
+  los parciales agudos bajaron, el ataque pasó a 45 ms y el filtro cierra en
+  1700 Hz. Medido sobre la mezcla normalizada, la melodía pasó de estar
+  8,4 dB bajo el acorde a 15,1 dB, y el brillo sobre 1800 Hz bajó 16 dB.
+- La primera nota de cada escena caía 1,0–1,6 s después del corte, encima de
+  la entrada del titular, y el oído la ataba al cambio de escena. Ahora entra
+  sobre los 2,5 s, ya instalada la escena.
+- **El cierre va sin melodía.** La escena 06 no tiene notas y la 05 cierra con
+  dos en vez de tres, así que la última entra en 37,1 s y ya está apagada
+  cuando aparece el lockup: ahí sólo queda el acorde resolviendo con su cola
+  de reverberación.
 - `musica.wav` se escribe aparte, por si se quiere rebalancear o reemplazar.
 
 Alternativas verificadas si se prefiere una pista grabada:
