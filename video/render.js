@@ -8,7 +8,9 @@ const path = require('path');
   const FPS   = parseFloat(get('fps', 30));
   const OUT   = get('out', path.join(__dirname, 'frames'));
   const PROBE = get('probe', null);          // comma-separated seconds -> png probes
-  const HTML  = 'file://' + path.join(__dirname, 'pilotes-reel.html');
+  // --html elige la pieza; por defecto, la primera (pilotes)
+  const PAGE  = get('html', 'pilotes-reel.html');
+  const HTML  = 'file://' + path.join(__dirname, PAGE);
 
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
@@ -18,7 +20,16 @@ const path = require('path');
   });
   await page.goto(HTML, { waitUntil: 'load' });
   if (args.includes('--nosubs')) await page.evaluate(() => { window.SUBS_ON = false; });
-  await page.evaluate(() => document.fonts.ready);
+  // document.fonts.ready sólo espera las fuentes YA en uso. En el segundo 0 no
+  // hay texto en Work Sans, así que sin esto el primer frame de una escena que
+  // la estrena sale con la fuente de reemplazo (más ancha: parte las líneas).
+  await page.evaluate(async () => {
+    const want = ['300 120px "Fraunces Display"',
+                  '400 48px "Work Sans N"', '500 48px "Work Sans N"',
+                  '400 34px "Plex Mono N"', '500 34px "Plex Mono N"'];
+    await Promise.all(want.map(f => document.fonts.load(f, 'Ágj0123')));
+    await document.fonts.ready;
+  });
   const TOTAL = await page.evaluate(() => window.TOTAL);
 
   if (PROBE) {
@@ -34,7 +45,7 @@ const path = require('path');
   }
 
   const N = Math.round(TOTAL * FPS);
-  console.log(`rendering ${N} frames @ ${FPS}fps (${TOTAL}s) -> ${OUT}`);
+  console.log(`rendering ${PAGE}: ${N} frames @ ${FPS}fps (${TOTAL}s) -> ${OUT}`);
   const t0 = Date.now();
   for (let i = 0; i < N; i++) {
     await page.evaluate(t => window.renderFrame(t), i / FPS);

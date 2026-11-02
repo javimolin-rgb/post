@@ -1,4 +1,19 @@
-# Animación — "La casa empieza bajo tierra"
+# Animaciones de Neorigen
+
+Dos piezas, misma maquinaria: una página HTML con línea de tiempo determinista,
+capturada fotograma a fotograma con Chromium y codificada con ffmpeg.
+
+| Pieza | HTML | Audio | Copy |
+|---|---|---|---|
+| La casa empieza bajo tierra | `pilotes-reel.html` | `audio.py` | `../CAPTION.md` |
+| Lo que pasa en seis meses | `seis-meses-reel.html` | `audio-seis-meses.py` | `../CAPTION-seis-meses.md` |
+
+`render.js` sirve a las dos: `--html <archivo>` elige cuál (por defecto, la de
+pilotes). `medir-texto.js` revisa que ningún texto se pase del ancho útil.
+
+---
+
+# 1 · "La casa empieza bajo tierra"
 
 Pieza generada por código: una página HTML con línea de tiempo determinista,
 capturada fotograma a fotograma con Chromium y codificada con ffmpeg.
@@ -319,3 +334,116 @@ y los rellenos salen vacíos.
   y `cubic-bezier(0.65, 0, 0.35, 1)` para transiciones, resueltos por Newton
   en el script.
 - Sin música: ver `../CAPTION.md`.
+
+---
+
+# 2 · "Lo que pasa en seis meses"
+
+Recorre la obra completa, del terreno a la entrega. Segunda pieza de la serie
+de proceso constructivo.
+
+## Qué la hace distinta de la primera
+
+El manual (§10) pide layout propio por pieza. Las diferencias no son
+cosméticas, son estructurales:
+
+| | Pilotes | Seis meses |
+|---|---|---|
+| Texto | arriba | abajo |
+| Ilustración | una por escena | **una sola**, viva en todo el reel |
+| Continuidad | movimiento de cámara que cose los cortes | **acumulación**: la misma casa se construye |
+| Cámara | un encuadre por escena, encadenados | un solo retroceso lentísimo (1,05 → 0,985) |
+| Avance | regla de 120 px bajo cada rótulo | una regla que crece de 0 a 870 px en toda la pieza |
+
+Por eso `#build` vive **fuera** de las escenas: las escenas sólo llevan texto, y
+`BUILD(T)` dibuja la obra en función del tiempo absoluto. El gancho muestra la
+casa terminada y, al entrar el relato, se apaga para que la misma casa se
+levante de cero; cada grupo toma la mayor de las dos opacidades.
+
+## Guion (8 escenas, 40,6 s)
+
+| Desde | Escena | Titular | Qué aparece en la obra |
+|---|---|---|---|
+| 0,0 s | Gancho | Esto tomó seis meses. | la casa terminada |
+| 4,8 s | Diseño | Primero se decide todo. | trazo de plano en Madera |
+| 10,0 s | Fundación | Nada se apoya en tierra blanda. | pilotes + plataforma |
+| 15,2 s | Estructura | Aparece el volumen. | marco, soleras y arriostres |
+| 20,4 s | Envolvente | Y después, el abrigo. | muros, entablado, techo, ventanas |
+| 25,8 s | Terminaciones | Por dentro, el oficio. | barandilla y ducto de la estufa |
+| 31,2 s | Entrega | Llave en mano. | la casa se enciende |
+| 36,0 s | Cierre | Lockup + "Cotiza en neorigen.cl" | — |
+
+## Por qué no hay meses ni etapas numeradas
+
+El sitio publica el plazo **total** (6–10 meses según el modelo; 6 meses para
+la Casa Lingue) pero **no** cuánto dura cada etapa. Numerar las seis etapas
+junto a un titular que dice "seis meses" haría leer un calendario que nadie
+confirmó. Por eso los rótulos van sin número y la regla de avance es continua,
+sin marcas. Ver `../CAPTION-seis-meses.md` para el detalle de qué dato sale de
+dónde y qué falta confirmar.
+
+## Re-generar
+
+```bash
+cd video
+python3 audio-seis-meses.py
+```
+
+```bash
+node render.js --html seis-meses-reel.html --fps 30 --out frames-seis
+```
+
+```bash
+ffmpeg -y -framerate 30 -i frames-seis/f%05d.jpg -i seis-meses-musica.wav -shortest \
+  -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
+  ../out/neorigen-seis-meses-reel-1080x1920.mp4
+```
+
+```bash
+ffmpeg -y -framerate 30 -i frames-seis/f%05d.jpg -i seis-meses-musica.wav -shortest \
+  -vf "crop=1080:1350:0:198" \
+  -c:v libx264 -profile:v high -level 4.0 -preset veryfast -crf 19 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -ar 48000 -movflags +faststart \
+  ../out/neorigen-seis-meses-feed-1080x1350.mp4
+```
+
+El orden importa: `audio-seis-meses.py` escribe la tabla de escenas **dentro**
+del HTML (bloque `SCENES:INICIO`/`SCENES:FIN`), así que va antes de renderizar.
+Para mover una escena se toca sólo `ESCENAS` en ese script.
+
+## Verificar el audio
+
+```bash
+ffmpeg -i seis-meses-musica.wav -af loudnorm=I=-14:TP=-1.5:print_format=summary -f null -
+```
+
+Medido al cierre de esta pieza: **−14,2 LUFS · −2,5 dBTP** (§9 pide ~−14 LUFS y
+pico ≤ −1 dBTP). Si se cambia el material hay que volver a medir y, si hace
+falta, ajustar el `peak` de `norm()` en `audio-seis-meses.py`.
+
+---
+
+# Herramientas comunes
+
+## `medir-texto.js` — que ningún texto se pase del ancho
+
+```bash
+node medir-texto.js seis-meses-reel.html
+node medir-texto.js pilotes-reel.html
+```
+
+Marca con `!!` cualquier línea que supere los 870 px útiles o que se parta en
+dos. Vale la pena correrlo cada vez que se toca un texto: un titular que se
+parte empuja el bloque fuera de la zona segura y no se nota hasta que el video
+está renderizado.
+
+## Precarga de tipografías en `render.js`
+
+`document.fonts.ready` sólo espera las fuentes **que ya están en uso**. En el
+segundo 0 de estas piezas no hay ningún texto en Work Sans, así que la fuente
+todavía no se había pedido y el primer frame de la escena que la estrena salía
+con la tipografía de reemplazo: más ancha, y por lo tanto con las líneas
+partidas. `render.js` ahora fuerza la carga de las tres familias antes de
+renderizar. Si se agrega una familia o un peso nuevo, hay que sumarlo a esa
+lista.
